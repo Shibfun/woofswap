@@ -15,13 +15,11 @@
             --text-color: #ffffff;
             --border-radius: 15px;
         }
-
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-
         body {
             font-family: 'Poppins', sans-serif;
             background: var(--gradient-bg);
@@ -32,7 +30,6 @@
             justify-content: center;
             align-items: center;
         }
-
         .container {
             width: 100%;
             max-width: 480px;
@@ -41,7 +38,6 @@
             border-radius: var(--border-radius);
             padding: 20px;
         }
-
         .header {
             background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
             padding: 12px;
@@ -51,7 +47,6 @@
             font-weight: 600;
             margin-bottom: 20px;
         }
-
         .connect-section button {
             padding: 12px;
             background: var(--primary-color);
@@ -64,9 +59,7 @@
             transition: background 0.2s;
             margin-bottom: 10px;
         }
-
         .connect-section button:hover { background: #e68a00; }
-
         .swap-box {
             background: var(--input-bg);
             padding: 15px;
@@ -74,7 +67,6 @@
             margin-bottom: 15px;
             position: relative;
         }
-
         .balance-row {
             display: flex;
             justify-content: space-between;
@@ -82,7 +74,6 @@
             margin-bottom: 5px;
             color: #ff9100;
         }
-
         .token-select {
             display: flex;
             align-items: center;
@@ -93,18 +84,15 @@
             cursor: pointer;
             margin-bottom: 10px;
         }
-
         .token-select div {
             display: flex;
             align-items: center;
         }
-
         .token-select img {
             width: 24px;
             height: 24px;
             margin-right: 10px;
         }
-
         .token-select .placeholder {
             width: 24px;
             height: 24px;
@@ -115,7 +103,6 @@
             justify-content: center;
             margin-right: 10px;
         }
-
         input {
             width: 100%;
             padding: 10px;
@@ -126,13 +113,11 @@
             font-size: 1em;
             text-align: right;
         }
-
         .percentage-buttons {
             display: flex;
             gap: 5px;
             margin-top: 10px;
         }
-
         .percentage-buttons button {
             padding: 5px 10px;
             background: #4a4f7a;
@@ -142,14 +127,11 @@
             color: var(--text-color);
             flex: 1;
         }
-
         .percentage-buttons button:hover { background: #5a5f8a; }
-
         .switch-button {
             text-align: center;
             margin: 15px 0;
         }
-
         .switch-button button {
             padding: 10px;
             background: var(--primary-color);
@@ -165,7 +147,6 @@
             justify-content: center;
             transition: background 0.2s;
         }
-
         .swap-button {
             padding: 15px;
             background: var(--primary-color);
@@ -177,9 +158,7 @@
             width: 100%;
             transition: background 0.2s;
         }
-
         .swap-button:hover, .switch-button button:hover { background: #e68a00; }
-
         .modal {
             display: none;
             position: fixed;
@@ -190,7 +169,6 @@
             background: rgba(0,0,0,0.5);
             z-index: 1000;
         }
-
         .modal-content {
             background: var(--card-bg);
             margin: 15% auto;
@@ -201,7 +179,6 @@
             max-height: 70vh;
             overflow-y: auto;
         }
-
         .token-item {
             display: flex;
             align-items: center;
@@ -209,29 +186,25 @@
             cursor: pointer;
             border-radius: 10px;
         }
-
         .token-item:hover { background: var(--input-bg); }
-
         .token-item img {
             width: 32px;
             height: 32px;
             margin-right: 10px;
         }
-
         .status {
             margin-top: 10px;
             font-size: 0.9em;
             color: var(--primary-color);
             text-align: center;
         }
-
         .slippage-info, .swap-note {
             font-size: 0.9em;
             color: #ff9100;
             margin-top: 5px;
             text-align: left;
         }
-
+        .swap-note .price-impact.red { color: red; }
         @media (max-width: 480px) {
             body { padding: 10px; }
             .container { padding: 15px; }
@@ -260,7 +233,7 @@
                 </div>
                 <span></span>
             </div>
-            <input type="number" id="fromAmount" placeholder="0.0" step="0.01">
+            <input type="number" id="fromAmount" placeholder="0.0" step="0.01" oninput="calculateOutput()">
             <div class="percentage-buttons">
                 <button onclick="setPercentage(25)">25%</button>
                 <button onclick="setPercentage(50)">50%</button>
@@ -268,11 +241,9 @@
                 <button onclick="setPercentage(100)">MAX</button>
             </div>
         </div>
-        
         <div class="switch-button">
             <button onclick="switchTokens()">↓↑</button>
         </div>
-
         <div class="swap-box">
             <div class="balance-row">
                 <span>To</span>
@@ -286,19 +257,16 @@
                 <span>▼</span>
             </div>
             <div class="slippage-info">Default Slippage: 0.5%</div>
-            <div class="swap-note">Amount automatically calculated by Woofswap</div>
+            <div class="swap-note" id="swapNote">Amount automatically calculated by Woofswap</div>
         </div>
-
         <button class="swap-button" onclick="swapTokens()">Swap</button>
     </div>
-
     <div class="modal" id="tokenModal">
         <div class="modal-content">
             <h3>Select a token</h3>
             <div id="tokenList"></div>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
     <script>
         const tokens = [
@@ -322,13 +290,9 @@
             { address: "0x60Af8e3BCa91E68B3d36141E0f3403C316004Af5", symbol: "MWRX", logo: "images/mwrx.png" },
             { address: "0x506d8d2d9c715Eb34F514cc3EF48C7aBD19e2bc7", symbol: "TREAT", logo: "images/treat.png" }
         ];
-
         const boneToken = { address: "0x839FdB6cc98342B428E074C1573ADF6D48CA3bFd", symbol: "BONE", logo: "images/bone.png", isNative: true };
-
         const routerAddress = "0x96b16aBD53Bfd765F4CD118590C1d0be8B57DE24";
-        const factoryAddress = "0xB9fbdFA27B7ba8BB2d4bB4aB399e4c55F0F7F83a";
         const wethAddress = "0x839FdB6cc98342B428E074C1573ADF6D48CA3bFd";
-
         const routerAbi = [
             {
                 "inputs": [
@@ -413,13 +377,11 @@
                 "type": "function"
             }
         ];
-
         const erc20Abi = [
             {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"type":"function"},
             {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"success","type":"bool"}],"type":"function"},
             {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"type":"function"}
         ];
-
         const shibarium = {
             chainId: 109,
             chainName: 'Shibarium',
@@ -427,19 +389,16 @@
             rpcUrls: ['https://rpc.shibrpc.com'],
             blockExplorerUrls: ['https://shibariumscan.io']
         };
-
         let web3, account, router;
         let fromToken = boneToken;
         let toToken = null;
         let fromBalance = '0';
         let isFromBone = true;
         const defaultSlippage = 0.005;
-
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('connectWalletButton').addEventListener('click', connectWallet);
             document.getElementById('toToken').addEventListener('click', () => showTokenModal('to'));
         });
-
         async function connectWallet() {
             const status = document.getElementById('networkStatus');
             const connectButton = document.getElementById('connectWalletButton');
@@ -479,10 +438,8 @@
                 connectButton.disabled = false;
             }
         }
-
         async function updateBalances() {
             if (!web3 || !account) return;
-
             if (fromToken.isNative) {
                 fromBalance = await web3.eth.getBalance(account);
                 document.getElementById('fromBalance').innerText = `Balance: ${web3.utils.fromWei(fromBalance, 'ether')}`;
@@ -491,7 +448,6 @@
                 fromBalance = await tokenContract.methods.balanceOf(account).call();
                 document.getElementById('fromBalance').innerText = `Balance: ${web3.utils.fromWei(fromBalance, 'ether')}`;
             }
-
             if (toToken) {
                 let toBalance;
                 if (toToken.isNative) {
@@ -503,57 +459,35 @@
                 document.getElementById('toBalance').innerText = `Balance: ${web3.utils.fromWei(toBalance, 'ether')}`;
             }
         }
-
         function showTokenModal(type) {
             const modal = document.getElementById('tokenModal');
             const tokenList = document.getElementById('tokenList');
             tokenList.innerHTML = '';
-
             tokens.forEach(token => {
                 const div = document.createElement('div');
                 div.className = 'token-item';
-                div.innerHTML = `
-                    <img src="${token.logo}" alt="${token.symbol}">
-                    <span>${token.symbol}</span>
-                `;
+                div.innerHTML = `<img src="${token.logo}" alt="${token.symbol}"><span>${token.symbol}</span>`;
                 div.onclick = () => selectToken(token, type);
                 tokenList.appendChild(div);
             });
-
             modal.style.display = 'block';
-            modal.onclick = (e) => {
-                if (e.target === modal) modal.style.display = 'none';
-            };
+            modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
         }
-
         function selectToken(token, type) {
             if (type === 'to') {
                 toToken = token;
-                document.getElementById('toToken').innerHTML = `
-                    <div>
-                        <img src="${token.logo}" alt="${token.symbol}">
-                        <span>${token.symbol}</span>
-                    </div>
-                    <span>▼</span>
-                `;
+                document.getElementById('toToken').innerHTML = `<div><img src="${token.logo}" alt="${token.symbol}"><span>${token.symbol}</span></div><span>▼</span>`;
                 if (isFromBone) {
                     fromToken = boneToken;
                 } else {
                     fromToken = token;
                     toToken = boneToken;
-                    document.getElementById('fromToken').innerHTML = `
-                        <div>
-                            <img src="${fromToken.logo}" alt="${fromToken.symbol}">
-                            <span id="fromTokenSymbol">${fromToken.symbol}</span>
-                        </div>
-                        <span></span>
-                    `;
+                    document.getElementById('fromToken').innerHTML = `<div><img src="${fromToken.logo}" alt="${fromToken.symbol}"><span id="fromTokenSymbol">${fromToken.symbol}</span></div><span></span>`;
                 }
             }
             document.getElementById('tokenModal').style.display = 'none';
             updateBalances();
         }
-
         function switchTokens() {
             if (!toToken) {
                 document.getElementById('networkStatus').innerText = "Please select a token to swap to.";
@@ -561,37 +495,43 @@
             }
             isFromBone = !isFromBone;
             [fromToken, toToken] = [toToken, fromToken];
-            document.getElementById('fromToken').innerHTML = `
-                <div>
-                    <img src="${fromToken.logo}" alt="${fromToken.symbol}">
-                    <span id="fromTokenSymbol">${fromToken.symbol}</span>
-                </div>
-                <span></span>
-            `;
-            document.getElementById('toToken').innerHTML = `
-                <div>
-                    <img src="${toToken.logo}" alt="${toToken.symbol}">
-                    <span>${toToken.symbol}</span>
-                </div>
-                <span>▼</span>
-            `;
+            document.getElementById('fromToken').innerHTML = `<div><img src="${fromToken.logo}" alt="${fromToken.symbol}"><span id="fromTokenSymbol">${fromToken.symbol}</span></div><span></span>`;
+            document.getElementById('toToken').innerHTML = `<div><img src="${toToken.logo}" alt="${toToken.symbol}"><span>${toToken.symbol}</span></div><span>▼</span>`;
             updateBalances();
         }
-
         function setPercentage(percentage) {
             if (!fromBalance || !web3) {
                 document.getElementById('networkStatus').innerText = "Please connect wallet first.";
                 return;
             }
             let amount = web3.utils.fromWei(fromBalance, 'ether') * (percentage / 100);
-            
             if (percentage === 100 && fromToken.isNative) {
-                amount = Math.max(0, amount - 0.01); // Subtract 0.01 BONE for gas fees
+                amount = Math.max(0, amount - 0.01);
             }
-
             document.getElementById('fromAmount').value = amount.toFixed(2);
+            calculateOutput();
         }
-
+        async function calculateOutput() {
+            const amountIn = document.getElementById('fromAmount').value;
+            const swapNote = document.getElementById('swapNote');
+            if (!web3 || !account || !toToken || !amountIn || amountIn <= 0) {
+                swapNote.innerHTML = 'Amount automatically calculated by Woofswap';
+                return;
+            }
+            const amountInWei = web3.utils.toWei(amountIn, 'ether');
+            const routes = [{ from: fromToken.address, to: toToken.address, stable: false }];
+            try {
+                const amounts = await router.methods.getAmountsOut(amountInWei, routes).call();
+                const output = parseFloat(web3.utils.fromWei(amounts[amounts.length - 1], 'ether'));
+                const expectedOutput = amountIn * (1 / 0.5); // 假设初始价格为 1 BONE = 0.5 SHIBS，无滑点情况
+                const priceImpact = ((expectedOutput - output) / expectedOutput) * 100;
+                const priceImpactColor = priceImpact > 5 ? 'red' : '';
+                swapNote.innerHTML = `Estimated output: ${output.toFixed(6)} ${toToken.symbol}<br>Price Impact: <span class="price-impact ${priceImpactColor}">${priceImpact.toFixed(2)}%</span>`;
+            } catch (error) {
+                console.error("Error calculating output:", error);
+                swapNote.innerHTML = 'Error calculating output.';
+            }
+        }
         async function approveToken(tokenAddress, amount) {
             if (tokenAddress === wethAddress && fromToken.isNative) return;
             const tokenContract = new web3.eth.Contract(erc20Abi, tokenAddress);
@@ -601,39 +541,27 @@
                 document.getElementById('networkStatus').innerText = "Token approved";
             }
         }
-
         async function swapTokens() {
             if (!web3 || !account || !toToken) {
                 document.getElementById('networkStatus').innerText = "Please connect wallet and select tokens.";
                 return;
             }
-
             const amountIn = document.getElementById('fromAmount').value;
             if (!amountIn || amountIn <= 0) {
                 document.getElementById('networkStatus').innerText = "Please enter a valid amount.";
                 return;
             }
-
             const amountInWei = web3.utils.toWei(amountIn, 'ether');
             const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
-
-            const amountOutMin = 0;
-            const routes = [{
-                from: fromToken.address,
-                to: toToken.address,
-                stable: false
-            }];
-
+            const routes = [{ from: fromToken.address, to: toToken.address, stable: false }];
             try {
                 document.getElementById('networkStatus').innerText = "Processing swap...";
-
                 if (!fromToken.isNative) {
                     await approveToken(fromToken.address, amountInWei);
                 }
-
                 if (fromToken.isNative) {
                     await router.methods.swapExactETHForTokensSupportingFeeOnTransferTokens(
-                        amountOutMin,
+                        0,
                         routes,
                         account,
                         deadline
@@ -641,13 +569,12 @@
                 } else {
                     await router.methods.swapExactTokensForETHSupportingFeeOnTransferTokens(
                         amountInWei,
-                        amountOutMin,
+                        0,
                         routes,
                         account,
                         deadline
                     ).send({ from: account });
                 }
-
                 document.getElementById('networkStatus').innerText = "Swap successful!";
                 document.getElementById('fromAmount').value = '';
                 await updateBalances();
