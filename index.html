@@ -37,6 +37,7 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             border-radius: var(--border-radius);
             padding: 20px;
+            position: relative;
         }
         .header {
             background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
@@ -204,13 +205,42 @@
             margin-top: 5px;
             text-align: left;
         }
-        .swap-note .price-impact.red { color: red; }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 5px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .dog-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .dog-section img {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 10px;
+        }
+        .dog-message {
+            font-size: 0.9em;
+            color: var(--secondary-color);
+            font-style: italic;
+        }
         @media (max-width: 480px) {
             body { padding: 10px; }
             .container { padding: 15px; }
             .header { font-size: 1.1em; }
             .modal-content { margin: 10% auto; }
             .percentage-buttons button { padding: 5px; }
+            .dog-section img { width: 50px; height: 50px; }
+            .dog-message { font-size: 0.8em; }
         }
     </style>
 </head>
@@ -260,6 +290,10 @@
             <div class="swap-note" id="swapNote">Amount automatically calculated by Woofswap</div>
         </div>
         <button class="swap-button" onclick="swapTokens()">Swap</button>
+        <div class="dog-section">
+            <img src="images/shiba.gif" alt="Shiba Dog">
+            <div class="dog-message" id="dogMessage">"Woof! Connect your wallet to start swapping, pup!"</div>
+        </div>
     </div>
     <div class="modal" id="tokenModal">
         <div class="modal-content">
@@ -273,7 +307,7 @@
             { address: "0xeCe898EdCc0AF91430603175F945D8de75291c70", symbol: "DAMN", logo: "images/damn.png" },
             { address: "0xe9Cb2D7ADC24Fc59FE00D6C0A0669BDF16805Fe0", symbol: "FEED", logo: "images/feed.png" },
             { address: "0x8f4b11d923BbAA6206f3Dd3ff84e8e31bafB49b7", symbol: "WOW", logo: "images/wow.png" },
-            { address: "0x632d1FF1fB27d88EDeDB90e70bFC094D7932A0ad", symbol: "SHIPA", logo: "images/shipa.png" },
+            { address: "0x632d1FF1fB27d88EdeDB90e70bFC094D7932A0ad", symbol: "SHIPA", logo: "images/shipa.png" },
             { address: "0x61CFA29261d8151D39244b8FfCf8DFd2f9DF3839", symbol: "CHIKA", logo: "images/chika.png" },
             { address: "0xD0daa7B6ff1B40d3cc6F0B2Cf7E85cB993D1c834", symbol: "WOOF", logo: "images/woof.png" },
             { address: "0x0b4FD6288b6d32171CC515bfFC9340026F56A358", symbol: "PIKA", logo: "images/pika.png" },
@@ -291,6 +325,7 @@
         ];
         const boneToken = { address: "0x839FdB6cc98342B428E074C1573ADF6D48CA3bFd", symbol: "BONE", logo: "images/bone.png", isNative: true };
         const routerAddress = "0x96b16aBD53Bfd765F4CD118590C1d0be8B57DE24";
+        const factoryAddress = "0xB9fbdFA27B7ba8BB2d4bB4aB399e4c55F0F7F83a";
         const wethAddress = "0x839FdB6cc98342B428E074C1573ADF6D48CA3bFd";
         const routerAbi = [
             {
@@ -374,7 +409,31 @@
                 "outputs": [],
                 "stateMutability": "nonpayable",
                 "type": "function"
+            },
+            {
+                "inputs": [
+                    { "internalType": "uint256", "name": "amountIn", "type": "uint256" },
+                    {
+                        "components": [
+                            { "internalType": "address", "name": "from", "type": "address" },
+                            { "internalType": "address", "name": "to", "type": "address" },
+                            { "internalType": "bool", "name": "stable", "type": "bool" }
+                        ],
+                        "internalType": "struct Router.route[]",
+                        "name": "routes",
+                        "type": "tuple[]"
+                    }
+                ],
+                "name": "getAmountsOut",
+                "outputs": [
+                    { "internalType": "uint256[]", "name": "amounts", "type": "uint256[]" }
+                ],
+                "stateMutability": "view",
+                "type": "function"
             }
+        ];
+        const factoryAbi = [
+            { "inputs": [{ "internalType": "address", "name": "tokenA", "type": "address" }, { "internalType": "address", "name": "tokenB", "type": "address" }, { "internalType": "bool", "name": "stable", "type": "bool" }], "name": "getPair", "outputs": [{ "internalType": "address", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" }
         ];
         const erc20Abi = [
             {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"type":"function"},
@@ -388,23 +447,27 @@
             rpcUrls: ['https://rpc.shibrpc.com'],
             blockExplorerUrls: ['https://shibariumscan.io']
         };
-        let web3, account, router;
+        let web3, account, router, factory;
         let fromToken = boneToken;
         let toToken = null;
         let fromBalance = '0';
         let isFromBone = true;
         const defaultSlippage = 0.005;
+
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('connectWalletButton').addEventListener('click', connectWallet);
             document.getElementById('toToken').addEventListener('click', () => showTokenModal('to'));
         });
+
         async function connectWallet() {
             const status = document.getElementById('networkStatus');
             const connectButton = document.getElementById('connectWalletButton');
+            const dogMessage = document.getElementById('dogMessage');
             try {
                 if (!window.ethereum) throw new Error("No wallet detected. Please install MetaMask or another wallet.");
                 connectButton.disabled = true;
                 status.innerText = "Connecting...";
+                dogMessage.innerText = '"Woof woof! Sniffing out your wallet, hold tight!"';
                 web3 = new Web3(window.ethereum);
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                 if (!accounts.length) throw new Error("No accounts found. Please unlock your wallet.");
@@ -428,15 +491,19 @@
                     }
                 }
                 router = new web3.eth.Contract(routerAbi, routerAddress);
+                factory = new web3.eth.Contract(factoryAbi, factoryAddress);
                 connectButton.textContent = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
                 status.innerText = "Connected to Shibarium";
+                dogMessage.innerText = '"Arf! You’re in, pup! Ready to swap some BONEs?"';
                 await updateBalances();
             } catch (error) {
                 status.innerText = "Failed: " + error.message;
+                dogMessage.innerText = '"Grrr... Something went wrong, try again, human!"';
                 console.error(error);
                 connectButton.disabled = false;
             }
         }
+
         async function updateBalances() {
             if (!web3 || !account) return;
             if (fromToken.isNative) {
@@ -458,9 +525,11 @@
                 document.getElementById('toBalance').innerText = `Balance: ${web3.utils.fromWei(toBalance, 'ether')}`;
             }
         }
+
         function showTokenModal(type) {
             const modal = document.getElementById('tokenModal');
             const tokenList = document.getElementById('tokenList');
+            const dogMessage = document.getElementById('dogMessage');
             tokenList.innerHTML = '';
             tokens.forEach(token => {
                 const div = document.createElement('div');
@@ -470,9 +539,12 @@
                 tokenList.appendChild(div);
             });
             modal.style.display = 'block';
+            dogMessage.innerText = '"Woof! Pick a token, let’s sniff out a good deal!"';
             modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
         }
+
         function selectToken(token, type) {
+            const dogMessage = document.getElementById('dogMessage');
             if (type === 'to') {
                 toToken = token;
                 document.getElementById('toToken').innerHTML = `<div><img src="${token.logo}" alt="${token.symbol}"><span>${token.symbol}</span></div><span>▼</span>`;
@@ -485,22 +557,32 @@
                 }
             }
             document.getElementById('tokenModal').style.display = 'none';
+            dogMessage.innerText = `"Arf arf! ${token.symbol} huh? Good choice, pup!"`;
             updateBalances();
+            calculateOutput();
         }
+
         function switchTokens() {
+            const dogMessage = document.getElementById('dogMessage');
             if (!toToken) {
                 document.getElementById('networkStatus').innerText = "Please select a token to swap to.";
+                dogMessage.innerText = '"Woof? No token to switch with, silly pup!"';
                 return;
             }
             isFromBone = !isFromBone;
             [fromToken, toToken] = [toToken, fromToken];
             document.getElementById('fromToken').innerHTML = `<div><img src="${fromToken.logo}" alt="${fromToken.symbol}"><span id="fromTokenSymbol">${fromToken.symbol}</span></div><span></span>`;
             document.getElementById('toToken').innerHTML = `<div><img src="${toToken.logo}" alt="${toToken.symbol}"><span>${toToken.symbol}</span></div><span>▼</span>`;
+            dogMessage.innerText = '"Woof woof! Flipping tokens like a pro, huh?"';
             updateBalances();
+            calculateOutput();
         }
+
         function setPercentage(percentage) {
+            const dogMessage = document.getElementById('dogMessage');
             if (!fromBalance || !web3) {
                 document.getElementById('networkStatus').innerText = "Please connect wallet first.";
+                dogMessage.innerText = '"Arf! No wallet, no treats! Connect first!"';
                 return;
             }
             let amount = web3.utils.fromWei(fromBalance, 'ether') * (percentage / 100);
@@ -508,29 +590,50 @@
                 amount = Math.max(0, amount - 0.01);
             }
             document.getElementById('fromAmount').value = amount.toFixed(2);
+            dogMessage.innerText = `"Woof! Going ${percentage}% in? Bold move, pup!"`;
             calculateOutput();
         }
+
         async function calculateOutput() {
             const amountIn = document.getElementById('fromAmount').value;
             const swapNote = document.getElementById('swapNote');
+            const dogMessage = document.getElementById('dogMessage');
             if (!web3 || !account || !toToken || !amountIn || amountIn <= 0) {
                 swapNote.innerHTML = 'Amount automatically calculated by Woofswap';
                 return;
             }
             const amountInWei = web3.utils.toWei(amountIn, 'ether');
-            const routes = [{ from: fromToken.address, to: toToken.address, stable: false }];
+            swapNote.innerHTML = `Estimated output: <span class="spinner"></span>`;
+            dogMessage.innerText = '"Woof! Sniffing out the best price, hang on!"';
             try {
-                const amounts = await router.methods.getAmountsOut(amountInWei, routes).call();
-                const output = parseFloat(web3.utils.fromWei(amounts[amounts.length - 1], 'ether'));
-                const expectedOutput = amountIn * (1 / 0.5); // 假设初始价格为 1 BONE = 0.5 SHIBS，无滑点情况
-                const priceImpact = ((expectedOutput - output) / expectedOutput) * 100;
-                const priceImpactColor = priceImpact > 5 ? 'red' : '';
-                swapNote.innerHTML = `Estimated output: ${output.toFixed(6)} ${toToken.symbol}<br>Price Impact: <span class="price-impact ${priceImpactColor}">${priceImpact.toFixed(2)}%</span>`;
+                let bestOutput = 0;
+                let bestStable = false;
+                for (const stable of [true, false]) {
+                    const pairAddress = await factory.methods.getPair(fromToken.address, toToken.address, stable).call();
+                    if (pairAddress !== '0x0000000000000000000000000000000000000000') {
+                        const routes = [{ from: fromToken.address, to: toToken.address, stable }];
+                        const amounts = await router.methods.getAmountsOut(amountInWei, routes).call();
+                        const output = parseFloat(web3.utils.fromWei(amounts[amounts.length - 1], 'ether'));
+                        if (output > bestOutput) {
+                            bestOutput = output;
+                            bestStable = stable;
+                        }
+                    }
+                }
+                if (bestOutput === 0) {
+                    swapNote.innerHTML = 'No valid trading pair found.';
+                    dogMessage.innerText = '"Grrr... No path to swap these bones, pup!"';
+                    return;
+                }
+                swapNote.innerHTML = `Estimated output: ${bestOutput.toFixed(6)} ${toToken.symbol}`;
+                dogMessage.innerText = `"Arf! Found ya ${bestOutput.toFixed(2)} ${toToken.symbol}, happy swapping!"`;
             } catch (error) {
                 console.error("Error calculating output:", error);
                 swapNote.innerHTML = 'Error calculating output.';
+                dogMessage.innerText = '"Grrr... Couldn’t fetch the price, try again pup!"';
             }
         }
+
         async function approveToken(tokenAddress, amount) {
             if (tokenAddress === wethAddress && fromToken.isNative) return;
             const tokenContract = new web3.eth.Contract(erc20Abi, tokenAddress);
@@ -540,27 +643,53 @@
                 document.getElementById('networkStatus').innerText = "Token approved";
             }
         }
+
         async function swapTokens() {
+            const dogMessage = document.getElementById('dogMessage');
             if (!web3 || !account || !toToken) {
                 document.getElementById('networkStatus').innerText = "Please connect wallet and select tokens.";
+                dogMessage.innerText = '"Woof? Missing something, pup! Check your setup!"';
                 return;
             }
             const amountIn = document.getElementById('fromAmount').value;
             if (!amountIn || amountIn <= 0) {
                 document.getElementById('networkStatus').innerText = "Please enter a valid amount.";
+                dogMessage.innerText = '"Arf! No amount? How am I supposed to swap air?!"';
                 return;
             }
             const amountInWei = web3.utils.toWei(amountIn, 'ether');
             const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
-            const routes = [{ from: fromToken.address, to: toToken.address, stable: false }];
+            let bestStable = false;
+            let bestOutput = 0;
+            for (const stable of [true, false]) {
+                const pairAddress = await factory.methods.getPair(fromToken.address, toToken.address, stable).call();
+                if (pairAddress !== '0x0000000000000000000000000000000000000000') {
+                    const routes = [{ from: fromToken.address, to: toToken.address, stable }];
+                    const amounts = await router.methods.getAmountsOut(amountInWei, routes).call();
+                    const output = parseFloat(web3.utils.fromWei(amounts[amounts.length - 1], 'ether'));
+                    if (output > bestOutput) {
+                        bestOutput = output;
+                        bestStable = stable;
+                    }
+                }
+            }
+            if (bestOutput === 0) {
+                document.getElementById('networkStatus').innerText = "No valid trading pair found.";
+                dogMessage.innerText = '"Grrr... No path to swap these bones, pup!"';
+                return;
+            }
+            const routes = [{ from: fromToken.address, to: toToken.address, stable: bestStable }];
+            const amounts = await router.methods.getAmountsOut(amountInWei, routes).call();
+            const amountOutMin = amounts[amounts.length - 1] * (1 - defaultSlippage);
             try {
                 document.getElementById('networkStatus').innerText = "Processing swap...";
+                dogMessage.innerText = '"Woof woof! Swapping time, let’s fetch those tokens!"';
                 if (!fromToken.isNative) {
                     await approveToken(fromToken.address, amountInWei);
                 }
                 if (fromToken.isNative) {
                     await router.methods.swapExactETHForTokensSupportingFeeOnTransferTokens(
-                        0,
+                        amountOutMin,
                         routes,
                         account,
                         deadline
@@ -568,18 +697,20 @@
                 } else {
                     await router.methods.swapExactTokensForETHSupportingFeeOnTransferTokens(
                         amountInWei,
-                        0,
+                        amountOutMin,
                         routes,
                         account,
                         deadline
                     ).send({ from: account });
                 }
                 document.getElementById('networkStatus').innerText = "Swap successful!";
+                dogMessage.innerText = '"Arf arf! Swap done, you’re a Woofswap champ!"';
                 document.getElementById('fromAmount').value = '';
                 await updateBalances();
             } catch (error) {
                 console.error("Swap failed:", error);
                 document.getElementById('networkStatus').innerText = "Swap failed: " + (error.message || "Unknown error");
+                dogMessage.innerText = '"Grrr... Swap didn’t work, let’s try again, pup!"';
             }
         }
     </script>
