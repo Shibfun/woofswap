@@ -574,6 +574,12 @@
                 "Arf! Sniffing out approval, almost there, hooman!",
                 "Bow wow! Authorizing the swap, stay pawsitive!",
                 "Ruff! Getting ready to trade, approving now!"
+            ],
+            userDenied: [
+                "Woof woof! You scared me off, hooman! Approve next time, pup!",
+                "Arf! No swap today? You’re a tricky one, let’s try again!",
+                "Bow wow! Rejected my trade? Give me a bone next time!",
+                "Ruff ruff! You denied me, hooman! Let’s wag back later!"
             ]
         };
 
@@ -717,11 +723,16 @@
                 dogMessage.innerText = getRandomMessage('connectFail');
                 return;
             }
-            let amount = web3.utils.fromWei(fromBalance, 'ether') * (percentage / 100);
+            let amount;
+            if (percentage === 100) {
+                amount = web3.utils.fromWei(fromBalance, 'ether');
+            } else {
+                amount = web3.utils.fromWei(fromBalance, 'ether') * (percentage / 100);
+            }
             if (percentage === 100 && fromToken.isNative) {
                 amount = Math.max(0, amount - 0.01);
             }
-            document.getElementById('fromAmount').value = amount.toFixed(2);
+            document.getElementById('fromAmount').value = amount.toString();
             dogMessage.innerText = getRandomMessage('setPercentage', percentage);
             calculateOutput();
         }
@@ -899,7 +910,10 @@
             } catch (error) {
                 console.error("Swap failed:", error);
                 let errorMessage = error.message || "Unknown error";
-                if (error.message.includes("INSUFFICIENT_OUTPUT_AMOUNT") || error.message.includes("EXCESSIVE_INPUT_AMOUNT")) {
+                if (error.message.includes("User denied transaction signature")) {
+                    errorMessage = "User denied transaction signature.";
+                    dogMessage.innerText = getRandomMessage('userDenied');
+                } else if (error.message.includes("INSUFFICIENT_OUTPUT_AMOUNT") || error.message.includes("EXCESSIVE_INPUT_AMOUNT")) {
                     errorMessage = "Swap failed: Price impact or slippage too high. Try a smaller amount or increase slippage.";
                     dogMessage.innerText = "Woof! Swap failed—too much price impact or slippage. Try less bones or more slippage, pup!";
                 } else if (error.message.includes("INSUFFICIENT_LIQUIDITY")) {
