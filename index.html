@@ -762,12 +762,31 @@
                 return;
             }
 
-            // Validate amountIn to prevent overflow
-            const amountInWei = web3.utils.toBN(web3.utils.toWei(amountIn, 'ether'));
-            const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+            // Convert to BigNumber and validate input
+            let amountInWei;
+            try {
+                amountInWei = web3.utils.toBN(web3.utils.toWei(amountIn, 'ether'));
+            } catch (error) {
+                status.innerText = "Invalid amount entered.";
+                dogMessage.innerText = getRandomMessage('swapNoAmount');
+                console.error("Amount conversion error:", error);
+                return;
+            }
 
+            // Check balance for non-native tokens
+            if (!fromToken.isNative) {
+                const tokenContract = new web3.eth.Contract(erc20Abi, fromToken.address);
+                const tokenBalance = await tokenContract.methods.balanceOf(account).call();
+                if (web3.utils.toBN(tokenBalance).lt(amountInWei)) {
+                    status.innerText = "Insufficient token balance.";
+                    dogMessage.innerText = "Woof! Not enough bones to swap, pup!";
+                    return;
+                }
+            }
+
+            const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
             let bestStable = false;
-            let bestOutput = 0;
+            let bestOutput = web3.utils.toBN('0');
             let routes;
 
             try {
@@ -777,22 +796,27 @@
                         const tempRoutes = [{ from: fromToken.address, to: toToken.address, stable }];
                         const amounts = await router.methods.getAmountsOut(amountInWei, tempRoutes).call();
                         const output = web3.utils.toBN(amounts[amounts.length - 1]);
-                        if (output.gt(web3.utils.toBN(bestOutput))) {
+                        if (output.gt(bestOutput)) {
                             bestOutput = output;
                             bestStable = stable;
                             routes = tempRoutes;
                         }
                     }
                 }
-                if (bestOutput === 0 || !routes) {
+                if (bestOutput.eq(web3.utils.toBN('0')) || !routes) {
                     status.innerText = "No valid trading pair found.";
                     dogMessage.innerText = getRandomMessage('calcFail');
                     return;
                 }
 
-                // Apply slippage using BigNumber
-                const slippageFactor = web3.utils.toBN(1000 - defaultSlippage * 1000); // 0.995 for 0.5% slippage
+                // Apply slippage using BigNumber and cap at reasonable value
+                const slippageFactor = web3.utils.toBN(1000 - defaultSlippage * 1000); // 995 for 0.5% slippage
                 const amountOutMin = bestOutput.mul(slippageFactor).div(web3.utils.toBN(1000));
+
+                // Debug logging
+                console.log("amountInWei:", amountInWei.toString());
+                console.log("bestOutput:", bestOutput.toString());
+                console.log("amountOutMin:", amountOutMin.toString());
 
                 status.innerText = "Processing swap...";
                 dogMessage.innerText = getRandomMessage('swapStart');
