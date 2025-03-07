@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Woofswap - Swap</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #ff9100;
+            --secondary-color: #ff6f61;
+            --gradient-bg: linear-gradient(180deg, #1e1e2f 0%, #2a2a3d 100%);
+            --card-bg: #2c2f48;
+            --input-bg: #373b5c;
+            --text-color: #ffffff;
+            --border-radius: 15px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--gradient-bg);
+            color: var(--text-color);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border-radius: var(--border-radius);
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            padding: 12px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .connect-section button {
+            padding: 12px;
+            background: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: background 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .connect-section button:hover { background: #e68a00; }
+
+        .swap-box {
+            background: var(--input-bg);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .balance-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            color: #ff9100;
+        }
+
+        .token-select {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .token-select div {
+            display: flex;
+            align-items: center;
+        }
+
+        .token-select img {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+        }
+
+        .token-select .placeholder {
+            width: 24px;
+            height: 24px;
+            background: #4a4f7a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            background: var(--input-bg);
+            border: none;
+            border-radius: 10px;
+            color: var(--text-color);
+            font-size: 1em;
+            text-align: right;
+        }
+
+        .percentage-buttons {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .percentage-buttons button {
+            padding: 5px 10px;
+            background: #4a4f7a;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: var(--text-color);
+            flex: 1;
+        }
+
+        .percentage-buttons button:hover { background: #5a5f8a; }
+
+        .switch-button {
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .switch-button button {
+            padding: 10px;
+            background: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .swap-button {
+            padding: 15px;
+            background: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .swap-button:hover, .switch-button button:hover { background: #e68a00; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            margin: 15% auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            border-radius: var(--border-radius);
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .token-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+
+        .token-item:hover { background: var(--input-bg); }
+
+        .token-item img {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+        }
+
+        .status {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .slippage-info, .swap-note {
+            font-size: 0.9em;
+            color: #ff9100;
+            margin-top: 5px;
+            text-align: left;
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            .header { font-size: 1.1em; }
+            .modal-content { margin: 10% auto; }
+            .percentage-buttons button { padding: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">Woofswap</div>
+        <div class="connect-section">
+            <button id="connectWalletButton">Connect Wallet</button>
+            <div id="networkStatus" class="status">Click to connect...</div>
+        </div>
+        <div class="swap-box">
+            <div class="balance-row">
+                <span>From</span>
+                <span id="fromBalance">Balance: 0</span>
+            </div>
+            <div class="token-select" id="fromToken">
+                <div>
+                    <img src="images/bone.png" alt="BONE">
+                    <span id="fromTokenSymbol">BONE</span>
+                </div>
+                <span></span>
+            </div>
+            <input type="number" id="fromAmount" placeholder="0.0" step="0.01">
+            <div class="percentage-buttons">
+                <button onclick="setPercentage(25)">25%</button>
+                <button onclick="setPercentage(50)">50%</button>
+                <button onclick="setPercentage(75)">75%</button>
+                <button onclick="setPercentage(100)">MAX</button>
+            </div>
+        </div>
+        
+        <div class="switch-button">
+            <button onclick="switchTokens()">↓↑</button>
+        </div>
+
+        <div class="swap-box">
+            <div class="balance-row">
+                <span>To</span>
+                <span id="toBalance">Balance: 0</span>
+            </div>
+            <div class="token-select" id="toToken">
+                <div>
+                    <div class="placeholder">?</div>
+                    <span>Select a token</span>
+                </div>
+                <span>▼</span>
+            </div>
+            <div class="slippage-info">Default Slippage: 0.5%</div>
+            <div class="swap-note">Amount automatically calculated by Woofswap</div>
+        </div>
+
+        <button class="swap-button" onclick="swapTokens()">Swap</button>
+    </div>
+
+    <div class="modal" id="tokenModal">
+        <div class="modal-content">
+            <h3>Select a token</h3>
+            <div id="tokenList"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
+    <script>
+        const tokens = [
+            { address: "0xeCe898EdCc0AF91430603175F945D8de75291c70", symbol: "DAMN", logo: "images/damn.png" },
+            { address: "0xe9Cb2D7ADC24Fc59FE00D6C0A0669BDF16805Fe0", symbol: "FEED", logo: "images/feed.png" },
+            { address: "0x8f4b11d923BbAA6206f3Dd3ff84e8e31bafB49b7", symbol: "WOW", logo: "images/wow.png" },
+            { address: "0x632d1FF1fB27d88EDeDB90e70bFC094D7932A0ad", symbol: "SHIPA", logo: "images/shipa.png" },
+            { address: "0x61CFA29261d8151D39244b8FfCf8DFd2f9DF3839", symbol: "CHIKA", logo: "images/chika.png" },
+            { address: "0xD0daa7B6ff1B40d3cc6F0B2Cf7E85cB993D1c834", symbol: "WOOF", logo: "images/woof.png" },
+            { address: "0x0b4FD6288b6d32171CC515bfFC9340026F56A358", symbol: "PIKA", logo: "images/pika.png" },
+            { address: "0x0cCD687CC6F8461170336D8e8cf46A39313DEab9", symbol: "LUISA", logo: "images/luisa.png" },
+            { address: "0xB9Ae1d4e474CC154F48e5C2f0559Eb3A78Ad1F09", symbol: "SHIBS", logo: "images/shibs.png" },
+            { address: "0x0C7f96C5f141Df976f8680044082c48C351f8906", symbol: "WILD", logo: "images/wild.png" },
+            { address: "0x91fbB2503AC69702061f1AC6885759Fc853e6EaE", symbol: "KNINE", logo: "images/knine.png" },
+            { address: "0x9f56cba9c3d4cd9f3d7b899ea0ff8292fe8264a8", symbol: "DUDU", logo: "images/dudu.png" },
+            { address: "0x8ed7d143Ef452316Ab1123d28Ab302dC3b80d3ce", symbol: "ETH", logo: "images/eth.png" },
+            { address: "0x495eea66B0f8b636D441dC6a98d8F5C3D455C4c0", symbol: "SHIB", logo: "images/shib.png" },
+            { address: "0x65218A41Fb92637254B4f8c97448d3dF343A3064", symbol: "LEASH", logo: "images/leash.png" },
+            { address: "0xaB082b8ad96c7f47ED70ED971Ce2116469954cFB", symbol: "USDT", logo: "images/usdt.png" },
+            { address: "0x60Af8e3BCa91E68B3d36141E0f3403C316004Af5", symbol: "MWRX", logo: "images/mwrx.png" },
+            { address: "0x506d8d2d9c715Eb34F514cc3EF48C7aBD19e2bc7", symbol: "TREAT", logo: "images/treat.png" }
+        ];
+
+        const boneToken = { address: "0x839FdB6cc98342B428E074C1573ADF6D48CA3bFd", symbol: "BONE", logo: "images/bone.png", isNative: true };
+
+        const routerAddress = "0x96b16aBD53Bfd765F4CD118590C1d0be8B57DE24";
+        const factoryAddress = "0xB9fbdFA27B7ba8BB2d4bB4aB399e4c55F0F7F83a";
+        const wethAddress = "0x839FdB6cc98342B428E074C1573ADF6D48CA3bFd";
+
+        const routerAbi = [
+            {
+                "inputs": [
+                    { "internalType": "uint256", "name": "amountIn", "type": "uint256" },
+                    { "internalType": "uint256", "name": "amountOutMin", "type": "uint256" },
+                    { "internalType": "address", "name": "tokenFrom", "type": "address" },
+                    { "internalType": "address", "name": "tokenTo", "type": "address" },
+                    { "internalType": "bool", "name": "stable", "type": "bool" },
+                    { "internalType": "address", "name": "to", "type": "address" },
+                    { "internalType": "uint256", "name": "deadline", "type": "uint256" }
+                ],
+                "name": "swapExactTokensForTokensSimple",
+                "outputs": [
+                    { "internalType": "uint256[]", "name": "amounts", "type": "uint256[]" }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    { "internalType": "uint256", "name": "amountIn", "type": "uint256" },
+                    { "internalType": "uint256", "name": "amountOutMin", "type": "uint256" },
+                    {
+                        "components": [
+                            { "internalType": "address", "name": "from", "type": "address" },
+                            { "internalType": "address", "name": "to", "type": "address" },
+                            { "internalType": "bool", "name": "stable", "type": "bool" }
+                        ],
+                        "internalType": "struct Router.route[]",
+                        "name": "routes",
+                        "type": "tuple[]"
+                    },
+                    { "internalType": "address", "name": "to", "type": "address" },
+                    { "internalType": "uint256", "name": "deadline", "type": "uint256" }
+                ],
+                "name": "swapExactTokensForTokensSupportingFeeOnTransferTokens",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    { "internalType": "uint256", "name": "amountOutMin", "type": "uint256" },
+                    {
+                        "components": [
+                            { "internalType": "address", "name": "from", "type": "address" },
+                            { "internalType": "address", "name": "to", "type": "address" },
+                            { "internalType": "bool", "name": "stable", "type": "bool" }
+                        ],
+                        "internalType": "struct Router.route[]",
+                        "name": "routes",
+                        "type": "tuple[]"
+                    },
+                    { "internalType": "address", "name": "to", "type": "address" },
+                    { "internalType": "uint256", "name": "deadline", "type": "uint256" }
+                ],
+                "name": "swapExactETHForTokensSupportingFeeOnTransferTokens",
+                "outputs": [],
+                "stateMutability": "payable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    { "internalType": "uint256", "name": "amountIn", "type": "uint256" },
+                    { "internalType": "uint256", "name": "amountOutMin", "type": "uint256" },
+                    {
+                        "components": [
+                            { "internalType": "address", "name": "from", "type": "address" },
+                            { "internalType": "address", "name": "to", "type": "address" },
+                            { "internalType": "bool", "name": "stable", "type": "bool" }
+                        ],
+                        "internalType": "struct Router.route[]",
+                        "name": "routes",
+                        "type": "tuple[]"
+                    },
+                    { "internalType": "address", "name": "to", "type": "address" },
+                    { "internalType": "uint256", "name": "deadline", "type": "uint256" }
+                ],
+                "name": "swapExactTokensForETHSupportingFeeOnTransferTokens",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ];
+
+        const erc20Abi = [
+            {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"type":"function"},
+            {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"success","type":"bool"}],"type":"function"},
+            {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"type":"function"}
+        ];
+
+        const shibarium = {
+            chainId: 109,
+            chainName: 'Shibarium',
+            nativeCurrency: { name: 'BONE', symbol: 'BONE', decimals: 18 },
+            rpcUrls: ['https://rpc.shibrpc.com'],
+            blockExplorerUrls: ['https://shibariumscan.io']
+        };
+
+        let web3, account, router;
+        let fromToken = boneToken;
+        let toToken = null;
+        let fromBalance = '0';
+        let isFromBone = true;
+        const defaultSlippage = 0.005;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('connectWalletButton').addEventListener('click', connectWallet);
+            document.getElementById('toToken').addEventListener('click', () => showTokenModal('to'));
+        });
+
+        async function connectWallet() {
+            const status = document.getElementById('networkStatus');
+            const connectButton = document.getElementById('connectWalletButton');
+            try {
+                if (!window.ethereum) throw new Error("No wallet detected. Please install MetaMask or another wallet.");
+                connectButton.disabled = true;
+                status.innerText = "Connecting...";
+                web3 = new Web3(window.ethereum);
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                if (!accounts.length) throw new Error("No accounts found. Please unlock your wallet.");
+                account = accounts[0];
+                const chainId = await web3.eth.getChainId();
+                if (Number(chainId) !== 109) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: "0x6d" }]
+                        });
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [shibarium]
+                            });
+                        } else {
+                            throw switchError;
+                        }
+                    }
+                }
+                router = new web3.eth.Contract(routerAbi, routerAddress);
+                connectButton.textContent = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
+                status.innerText = "Connected to Shibarium";
+                await updateBalances();
+            } catch (error) {
+                status.innerText = "Failed: " + error.message;
+                console.error(error);
+                connectButton.disabled = false;
+            }
+        }
+
+        async function updateBalances() {
+            if (!web3 || !account) return;
+
+            if (fromToken.isNative) {
+                fromBalance = await web3.eth.getBalance(account);
+                document.getElementById('fromBalance').innerText = `Balance: ${web3.utils.fromWei(fromBalance, 'ether')}`;
+            } else {
+                const tokenContract = new web3.eth.Contract(erc20Abi, fromToken.address);
+                fromBalance = await tokenContract.methods.balanceOf(account).call();
+                document.getElementById('fromBalance').innerText = `Balance: ${web3.utils.fromWei(fromBalance, 'ether')}`;
+            }
+
+            if (toToken) {
+                let toBalance;
+                if (toToken.isNative) {
+                    toBalance = await web3.eth.getBalance(account);
+                } else {
+                    const toTokenContract = new web3.eth.Contract(erc20Abi, toToken.address);
+                    toBalance = await toTokenContract.methods.balanceOf(account).call();
+                }
+                document.getElementById('toBalance').innerText = `Balance: ${web3.utils.fromWei(toBalance, 'ether')}`;
+            }
+        }
+
+        function showTokenModal(type) {
+            const modal = document.getElementById('tokenModal');
+            const tokenList = document.getElementById('tokenList');
+            tokenList.innerHTML = '';
+
+            tokens.forEach(token => {
+                const div = document.createElement('div');
+                div.className = 'token-item';
+                div.innerHTML = `
+                    <img src="${token.logo}" alt="${token.symbol}">
+                    <span>${token.symbol}</span>
+                `;
+                div.onclick = () => selectToken(token, type);
+                tokenList.appendChild(div);
+            });
+
+            modal.style.display = 'block';
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.style.display = 'none';
+            };
+        }
+
+        function selectToken(token, type) {
+            if (type === 'to') {
+                toToken = token;
+                document.getElementById('toToken').innerHTML = `
+                    <div>
+                        <img src="${token.logo}" alt="${token.symbol}">
+                        <span>${token.symbol}</span>
+                    </div>
+                    <span>▼</span>
+                `;
+                if (isFromBone) {
+                    fromToken = boneToken;
+                } else {
+                    fromToken = token;
+                    toToken = boneToken;
+                    document.getElementById('fromToken').innerHTML = `
+                        <div>
+                            <img src="${fromToken.logo}" alt="${fromToken.symbol}">
+                            <span id="fromTokenSymbol">${fromToken.symbol}</span>
+                        </div>
+                        <span></span>
+                    `;
+                }
+            }
+            document.getElementById('tokenModal').style.display = 'none';
+            updateBalances();
+        }
+
+        function switchTokens() {
+            if (!toToken) {
+                document.getElementById('networkStatus').innerText = "Please select a token to swap to.";
+                return;
+            }
+            isFromBone = !isFromBone;
+            [fromToken, toToken] = [toToken, fromToken];
+            document.getElementById('fromToken').innerHTML = `
+                <div>
+                    <img src="${fromToken.logo}" alt="${fromToken.symbol}">
+                    <span id="fromTokenSymbol">${fromToken.symbol}</span>
+                </div>
+                <span></span>
+            `;
+            document.getElementById('toToken').innerHTML = `
+                <div>
+                    <img src="${toToken.logo}" alt="${toToken.symbol}">
+                    <span>${toToken.symbol}</span>
+                </div>
+                <span>▼</span>
+            `;
+            updateBalances();
+        }
+
+        function setPercentage(percentage) {
+            if (!fromBalance || !web3) {
+                document.getElementById('networkStatus').innerText = "Please connect wallet first.";
+                return;
+            }
+            const amount = (web3.utils.fromWei(fromBalance, 'ether') * percentage / 100).toFixed(2);
+            document.getElementById('fromAmount').value = amount;
+        }
+
+        async function approveToken(tokenAddress, amount) {
+            if (tokenAddress === wethAddress && fromToken.isNative) return;
+            const tokenContract = new web3.eth.Contract(erc20Abi, tokenAddress);
+            const allowance = await tokenContract.methods.allowance(account, routerAddress).call();
+            if (web3.utils.toBN(allowance).lt(web3.utils.toBN(amount))) {
+                await tokenContract.methods.approve(routerAddress, web3.utils.toWei('1000000', 'ether')).send({ from: account });
+                document.getElementById('networkStatus').innerText = "Token approved";
+            }
+        }
+
+        async function swapTokens() {
+            if (!web3 || !account || !toToken) {
+                document.getElementById('networkStatus').innerText = "Please connect wallet and select tokens.";
+                return;
+            }
+
+            const amountIn = document.getElementById('fromAmount').value;
+            if (!amountIn || amountIn <= 0) {
+                document.getElementById('networkStatus').innerText = "Please enter a valid amount.";
+                return;
+            }
+
+            const amountInWei = web3.utils.toWei(amountIn, 'ether');
+            const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+
+            const amountOutMin = 0;
+            const routes = [{
+                from: fromToken.address,
+                to: toToken.address,
+                stable: false
+            }];
+
+            try {
+                document.getElementById('networkStatus').innerText = "Processing swap...";
+
+                if (!fromToken.isNative) {
+                    await approveToken(fromToken.address, amountInWei);
+                }
+
+                if (fromToken.isNative) {
+                    await router.methods.swapExactETHForTokensSupportingFeeOnTransferTokens(
+                        amountOutMin,
+                        routes,
+                        account,
+                        deadline
+                    ).send({ from: account, value: amountInWei });
+                } else {
+                    await router.methods.swapExactTokensForETHSupportingFeeOnTransferTokens(
+                        amountInWei,
+                        amountOutMin,
+                        routes,
+                        account,
+                        deadline
+                    ).send({ from: account });
+                }
+
+                document.getElementById('networkStatus').innerText = "Swap successful!";
+                document.getElementById('fromAmount').value = '';
+                await updateBalances();
+            } catch (error) {
+                console.error("Swap failed:", error);
+                document.getElementById('networkStatus').innerText = "Swap failed: " + (error.message || "Unknown error");
+            }
+        }
+    </script>
+</body>
+</html>
