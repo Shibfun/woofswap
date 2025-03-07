@@ -159,7 +159,11 @@
             width: 100%;
             transition: background 0.2s;
         }
-        .swap-button:hover, .switch-button button:hover { background: #e68a00; }
+        .swap-button:disabled {
+            background: #4a4f7a;
+            cursor: not-allowed;
+        }
+        .swap-button:hover:not(:disabled), .switch-button button:hover { background: #e68a00; }
         .modal {
             display: none;
             position: fixed;
@@ -289,7 +293,7 @@
             <div class="slippage-info">Default Slippage: 0.5%</div>
             <div class="swap-note" id="swapNote">Amount automatically calculated by Woofswap</div>
         </div>
-        <button class="swap-button" onclick="swapTokens()">Swap</button>
+        <button class="swap-button" id="swapButton" onclick="swapTokens()">Swap</button>
         <div class="dog-section">
             <img src="images/shiba.gif" alt="Shiba Dog">
             <div class="dog-message" id="dogMessage">"Woof! Connect your wallet to start swapping, pup!"</div>
@@ -458,10 +462,10 @@
         let toToken = null;
         let fromBalance = '0';
         let isFromBone = true;
+        let isApproving = false;
         const defaultSlippage = 0.005;
-        const maxPriceImpact = 0.5; // 50% price impact threshold
+        const maxPriceImpact = 0.5;
 
-        // Random dog message generator
         const dogMessages = {
             connectStart: [
                 "Woof woof! Sniffing out your wallet, hold tight, human!",
@@ -564,6 +568,12 @@
                 "Woof? Pool’s too shallow—try a smaller swap, hooman!",
                 "Arf arf! Liquidity’s low, can’t fetch that many bones!",
                 "Ruff! Pool’s running dry—let’s try a smaller trade!"
+            ],
+            approving: [
+                "Woof! Approving your tokens, hold on, pup!",
+                "Arf! Sniffing out approval, almost there, hooman!",
+                "Bow wow! Authorizing the swap, stay pawsitive!",
+                "Ruff! Getting ready to trade, approving now!"
             ]
         };
 
@@ -736,7 +746,6 @@
             dogMessage.innerText = getRandomMessage('calcStart');
             try {
                 let bestOutput = web3.utils.toBN('0');
-                let bestStable = false;
                 for (const stable of [true, false]) {
                     const pairAddress = await factory.methods.getPair(fromToken.address, toToken.address, stable).call();
                     if (pairAddress !== '0x0000000000000000000000000000000000000000') {
@@ -745,7 +754,6 @@
                         const output = web3.utils.toBN(amounts[amounts.length - 1]);
                         if (output.gt(bestOutput)) {
                             bestOutput = output;
-                            bestStable = stable;
                         }
                     }
                 }
@@ -754,30 +762,6 @@
                     dogMessage.innerText = getRandomMessage('calcFail');
                     return;
                 }
-
-                // Estimate price impact
-                const pairAddress = await factory.methods.getPair(fromToken.address, toToken.address, bestStable).call();
-                const pairContract = new web3.eth.Contract(pairAbi, pairAddress);
-                const reserves = await pairContract.methods.getReserves().call();
-                const token0 = await pairContract.methods.token0().call();
-                const reserveFrom = token0 === fromToken.address ? reserves.reserve0 : reserves.reserve1;
-                const reserveTo = token0 === fromToken.address ? reserves.reserve1 : reserves.reserve0;
-                const reserveFromBN = web3.utils.toBN(reserveFrom);
-                const reserveToBN = web3.utils.toBN(reserveTo);
-                const priceImpact = amountInWei.mul(web3.utils.toBN(100)).div(reserveFromBN.add(amountInWei));
-                if (priceImpact.gt(web3.utils.toBN(maxPriceImpact * 100))) {
-                    swapNote.innerHTML = `Price impact too high (${priceImpact.toString()}%).`;
-                    dogMessage.innerText = getRandomMessage('highPriceImpact');
-                    return;
-                }
-
-                // Check if pool has enough liquidity
-                if (bestOutput.gt(reserveToBN)) {
-                    swapNote.innerHTML = `Insufficient liquidity in pool.`;
-                    dogMessage.innerText = getRandomMessage('insufficientLiquidity');
-                    return;
-                }
-
                 const outputEther = parseFloat(web3.utils.fromWei(bestOutput, 'ether'));
                 swapNote.innerHTML = `Estimated output: ${outputEther.toFixed(6)} ${toToken.symbol}`;
                 dogMessage.innerText = getRandomMessage('calcSuccess', outputEther.toFixed(2), toToken.symbol);
@@ -793,14 +777,26 @@
             const tokenContract = new web3.eth.Contract(erc20Abi, tokenAddress);
             const allowance = await tokenContract.methods.allowance(account, routerAddress).call();
             if (web3.utils.toBN(allowance).lt(web3.utils.toBN(amount))) {
-                await tokenContract.methods.approve(routerAddress, web3.utils.toWei('1000000', 'ether')).send({ from: account });
+                const swapButton = document.getElementById('swapButton');
+                const dogMessage = document.getElementById('dogMessage');
+                isApproving = true;
+                swapButton.textContent = "Authorizing...";
+                swapButton.disabled = true;
+                dogMessage.innerText = getRandomMessage('approving');
+                await tokenContract.methods.approve(routerAddress, amount).send({ from: account });
                 document.getElementById('networkStatus').innerText = "Token approved";
+                isApproving = false;
+                swapButton.textContent = "Swap";
+                swapButton.disabled = false;
+                dogMessage.innerText = "Woof! Tokens approved, ready to swap!";
             }
         }
 
         async function swapTokens() {
             const dogMessage = document.getElementById('dogMessage');
             const status = document.getElementById('networkStatus');
+            const swapButton = document.getElementById('swapButton');
+            if (isApproving) return;
             if (!web3 || !account || !toToken) {
                 status.innerText = "Please connect wallet and select tokens.";
                 dogMessage.innerText = getRandomMessage('swapNoToken');
@@ -812,8 +808,6 @@
                 dogMessage.innerText = getRandomMessage('swapNoAmount');
                 return;
             }
-
-            // Convert to BigNumber and validate input
             let amountInWei;
             try {
                 amountInWei = web3.utils.toBN(web3.utils.toWei(amountIn, 'ether'));
@@ -823,8 +817,6 @@
                 console.error("Amount conversion error:", error);
                 return;
             }
-
-            // Check balance for non-native tokens
             if (!fromToken.isNative) {
                 const tokenContract = new web3.eth.Contract(erc20Abi, fromToken.address);
                 const tokenBalance = await tokenContract.methods.balanceOf(account).call();
@@ -834,12 +826,10 @@
                     return;
                 }
             }
-
             const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
             let bestStable = false;
             let bestOutput = web3.utils.toBN('0');
             let routes;
-
             try {
                 for (const stable of [true, false]) {
                     const pairAddress = await factory.methods.getPair(fromToken.address, toToken.address, stable).call();
@@ -859,8 +849,6 @@
                     dogMessage.innerText = getRandomMessage('calcFail');
                     return;
                 }
-
-                // Estimate price impact
                 const pairAddress = await factory.methods.getPair(fromToken.address, toToken.address, bestStable).call();
                 const pairContract = new web3.eth.Contract(pairAbi, pairAddress);
                 const reserves = await pairContract.methods.getReserves().call();
@@ -875,33 +863,19 @@
                     dogMessage.innerText = getRandomMessage('highPriceImpact');
                     return;
                 }
-
-                // Check if pool has enough liquidity
                 if (bestOutput.gt(reserveToBN)) {
                     status.innerText = `Insufficient liquidity in pool.`;
                     dogMessage.innerText = getRandomMessage('insufficientLiquidity');
                     return;
                 }
-
-                // Apply slippage with BigNumber
-                const slippageFactor = web3.utils.toBN(1000 - defaultSlippage * 1000); // 995 for 0.5% slippage
+                const slippageFactor = web3.utils.toBN(1000 - defaultSlippage * 1000);
                 const amountOutMin = bestOutput.mul(slippageFactor).div(web3.utils.toBN(1000));
-
-                // Debug logging
-                console.log("amountInWei:", amountInWei.toString());
-                console.log("bestOutput:", bestOutput.toString());
-                console.log("amountOutMin:", amountOutMin.toString());
-                console.log("reserveFrom:", reserveFromBN.toString());
-                console.log("reserveTo:", reserveToBN.toString());
-                console.log("priceImpact:", priceImpact.toString() + "%");
-
+                swapButton.disabled = true;
                 status.innerText = "Processing swap...";
                 dogMessage.innerText = getRandomMessage('swapStart');
-
                 if (!fromToken.isNative) {
                     await approveToken(fromToken.address, amountInWei);
                 }
-
                 if (fromToken.isNative) {
                     await router.methods.swapExactETHForTokensSupportingFeeOnTransferTokens(
                         amountOutMin.toString(),
@@ -918,7 +892,6 @@
                         deadline
                     ).send({ from: account });
                 }
-
                 status.innerText = "Swap successful!";
                 dogMessage.innerText = getRandomMessage('swapSuccess');
                 document.getElementById('fromAmount').value = '';
@@ -936,6 +909,8 @@
                     dogMessage.innerText = getRandomMessage('swapFail');
                 }
                 status.innerText = errorMessage;
+            } finally {
+                swapButton.disabled = false;
             }
         }
     </script>
