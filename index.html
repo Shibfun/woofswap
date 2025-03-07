@@ -454,6 +454,109 @@
         let isFromBone = true;
         const defaultSlippage = 0.005;
 
+        // Random dog message generator
+        const dogMessages = {
+            connectStart: [
+                "Woof woof! Sniffing out your wallet, hold tight, human!",
+                "Arf! Digging into Shibarium, let’s fetch that wallet!",
+                "Bow wow! Connecting to your stash, stay pawsitive!",
+                "Woof! I smell a wallet, let’s link it up quick!"
+            ],
+            connectSuccess: [
+                "Arf arf! You’re in, pup! Time to chase some BONEs!",
+                "Woof! Wallet’s hooked, ready to roll in Shibarium!",
+                "Yip yip! Connected, hooman! Let’s swap some treats!",
+                "Bow wow! Welcome aboard, let’s sniff out some swaps!"
+            ],
+            connectFail: [
+                "Grrr... Wallet slipped away, try again, hooman!",
+                "Woof? No wallet scent detected, give it another go!",
+                "Arf arf! Something barked up, retry connecting, pup!",
+                "Ruff! Wallet’s hiding, let’s dig it out again!"
+            ],
+            tokenModal: [
+                "Woof! Pick a token, let’s sniff out a juicy deal!",
+                "Arf! What treat shall we fetch today, hooman?",
+                "Bow wow! Tokens galore, choose your fave, pup!",
+                "Yip! Time to pick a bone to swap, let’s go!"
+            ],
+            selectToken: (symbol) => [
+                `Arf arf! ${symbol}, huh? Smells like a tasty choice!`,
+                `Woof! ${symbol} caught your eye? Good nose, pup!`,
+                `Bow wow! ${symbol} it is! Let’s wag into action!`,
+                `Yip yip! ${symbol} sounds pawsome, ready to swap?`
+            ],
+            switchTokens: [
+                "Woof woof! Flipping tokens like a Shib pro, huh?",
+                "Arf! Swapping sides, let’s keep the tail wagging!",
+                "Bow wow! Token switcheroo, you’re a clever pup!",
+                "Ruff ruff! Mixing it up, let’s see what we fetch!"
+            ],
+            setPercentage: (percent) => [
+                `Woof! ${percent}% in? You’re a bold Shib, hooman!`,
+                `Arf arf! Going ${percent}%? Let’s dig into that swap!`,
+                `Bow wow! ${percent}% of the stash? Pawsitively daring!`,
+                `Yip! ${percent}%? You’re chasing big bones today!`
+            ],
+            calcStart: [
+                "Woof! Sniffing out the best price, hang tight!",
+                "Arf! Digging up some swap numbers, stay put, pup!",
+                "Bow wow! Crunching bones, I’ll fetch the output soon!",
+                "Ruff! Calculating your treat, give me a sec, hooman!"
+            ],
+            calcSuccess: (amount, symbol) => [
+                `Arf! Found ya ${amount} ${symbol}! Ready to swap, pup?`,
+                `Woof woof! Snagged ${amount} ${symbol}, let’s roll!`,
+                `Yip yip! Dug up ${amount} ${symbol}, happy tail wags!`,
+                `Bow wow! ${amount} ${symbol} sniffed out, swap time!`
+            ],
+            calcFail: [
+                "Grrr... No path for these bones, try a new pair, pup!",
+                "Woof? Swap trail’s cold, pick another token, hooman!",
+                "Arf arf! Couldn’t fetch the output, let’s retry!",
+                "Ruff! Swap math barked up, give it another go!"
+            ],
+            swapStart: [
+                "Woof woof! Swapping time, let’s fetch those tokens!",
+                "Arf! Launching the swap, hold onto your leash, pup!",
+                "Bow wow! Trading bones, here we go, Shib style!",
+                "Yip! Swapping in Shibarium, let’s make it pawsome!"
+            ],
+            swapSuccess: [
+                "Arf arf! Swap done, you’re a Woofswap champ, hooman!",
+                "Woof! Tokens fetched, tail-wagging success, pup!",
+                "Bow wow! Swapped like a pro, time to celebrate!",
+                "Yip yip! Swap complete, you’re the top dog now!"
+            ],
+            swapFail: [
+                "Grrr... Swap didn’t work, let’s try again, pup!",
+                "Woof? Swap got lost, retry it, clever hooman!",
+                "Arf! Token chase failed, another go, Shib friend?",
+                "Ruff ruff! Swap slipped, let’s dig it up again!"
+            ],
+            swapNoToken: [
+                "Woof? Missing a token, pup! Pick one first!",
+                "Arf arf! No treats to swap, choose a pair, hooman!",
+                "Bow wow! Where’s the token? Let’s sniff one out!",
+                "Yip! Can’t swap air, pick a token, Shib pal!"
+            ],
+            swapNoAmount: [
+                "Arf! No amount? How am I supposed to swap air?!",
+                "Woof woof! Gimme a number, pup, or we’re stuck!",
+                "Bow wow! Empty swap? Fill it up, hooman!",
+                "Ruff! Amount’s missing, let’s fetch some digits!"
+            ]
+        };
+
+        function getRandomMessage(type, param1, param2) {
+            const messages = dogMessages[type];
+            if (typeof messages === 'function') {
+                const options = messages(param shackles = Math.floor(Math.random() * messages(param1, param2).length);
+                return messages(param1, param2)[index];
+            }
+            return messages[index];
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('connectWalletButton').addEventListener('click', connectWallet);
             document.getElementById('toToken').addEventListener('click', () => showTokenModal('to'));
@@ -467,7 +570,7 @@
                 if (!window.ethereum) throw new Error("No wallet detected. Please install MetaMask or another wallet.");
                 connectButton.disabled = true;
                 status.innerText = "Connecting...";
-                dogMessage.innerText = '"Woof woof! Sniffing out your wallet, hold tight!"';
+                dogMessage.innerText = getRandomMessage('connectStart');
                 web3 = new Web3(window.ethereum);
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                 if (!accounts.length) throw new Error("No accounts found. Please unlock your wallet.");
@@ -494,11 +597,11 @@
                 factory = new web3.eth.Contract(factoryAbi, factoryAddress);
                 connectButton.textContent = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
                 status.innerText = "Connected to Shibarium";
-                dogMessage.innerText = '"Arf! You’re in, pup! Ready to swap some BONEs?"';
+                dogMessage.innerText = getRandomMessage('connectSuccess');
                 await updateBalances();
             } catch (error) {
                 status.innerText = "Failed: " + error.message;
-                dogMessage.innerText = '"Grrr... Something went wrong, try again, human!"';
+                dogMessage.innerText = getRandomMessage('connectFail');
                 console.error(error);
                 connectButton.disabled = false;
             }
@@ -539,7 +642,7 @@
                 tokenList.appendChild(div);
             });
             modal.style.display = 'block';
-            dogMessage.innerText = '"Woof! Pick a token, let’s sniff out a good deal!"';
+            dogMessage.innerText = getRandomMessage('tokenModal');
             modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
         }
 
@@ -557,7 +660,7 @@
                 }
             }
             document.getElementById('tokenModal').style.display = 'none';
-            dogMessage.innerText = `"Arf arf! ${token.symbol} huh? Good choice, pup!"`;
+            dogMessage.innerText = getRandomMessage('selectToken', token.symbol);
             updateBalances();
             calculateOutput();
         }
@@ -566,14 +669,14 @@
             const dogMessage = document.getElementById('dogMessage');
             if (!toToken) {
                 document.getElementById('networkStatus').innerText = "Please select a token to swap to.";
-                dogMessage.innerText = '"Woof? No token to switch with, silly pup!"';
+                dogMessage.innerText = getRandomMessage('swapNoToken');
                 return;
             }
             isFromBone = !isFromBone;
             [fromToken, toToken] = [toToken, fromToken];
             document.getElementById('fromToken').innerHTML = `<div><img src="${fromToken.logo}" alt="${fromToken.symbol}"><span id="fromTokenSymbol">${fromToken.symbol}</span></div><span></span>`;
             document.getElementById('toToken').innerHTML = `<div><img src="${toToken.logo}" alt="${toToken.symbol}"><span>${toToken.symbol}</span></div><span>▼</span>`;
-            dogMessage.innerText = '"Woof woof! Flipping tokens like a pro, huh?"';
+            dogMessage.innerText = getRandomMessage('switchTokens');
             updateBalances();
             calculateOutput();
         }
@@ -582,7 +685,7 @@
             const dogMessage = document.getElementById('dogMessage');
             if (!fromBalance || !web3) {
                 document.getElementById('networkStatus').innerText = "Please connect wallet first.";
-                dogMessage.innerText = '"Arf! No wallet, no treats! Connect first!"';
+                dogMessage.innerText = getRandomMessage('connectFail');
                 return;
             }
             let amount = web3.utils.fromWei(fromBalance, 'ether') * (percentage / 100);
@@ -590,7 +693,7 @@
                 amount = Math.max(0, amount - 0.01);
             }
             document.getElementById('fromAmount').value = amount.toFixed(2);
-            dogMessage.innerText = `"Woof! Going ${percentage}% in? Bold move, pup!"`;
+            dogMessage.innerText = getRandomMessage('setPercentage', percentage);
             calculateOutput();
         }
 
@@ -604,7 +707,7 @@
             }
             const amountInWei = web3.utils.toWei(amountIn, 'ether');
             swapNote.innerHTML = `Estimated output: <span class="spinner"></span>`;
-            dogMessage.innerText = '"Woof! Sniffing out the best price, hang on!"';
+            dogMessage.innerText = getRandomMessage('calcStart');
             try {
                 let bestOutput = 0;
                 let bestStable = false;
@@ -622,15 +725,15 @@
                 }
                 if (bestOutput === 0) {
                     swapNote.innerHTML = 'No valid trading pair found.';
-                    dogMessage.innerText = '"Grrr... No path to swap these bones, pup!"';
+                    dogMessage.innerText = getRandomMessage('calcFail');
                     return;
                 }
                 swapNote.innerHTML = `Estimated output: ${bestOutput.toFixed(6)} ${toToken.symbol}`;
-                dogMessage.innerText = `"Arf! Found ya ${bestOutput.toFixed(2)} ${toToken.symbol}, happy swapping!"`;
+                dogMessage.innerText = getRandomMessage('calcSuccess', bestOutput.toFixed(2), toToken.symbol);
             } catch (error) {
                 console.error("Error calculating output:", error);
                 swapNote.innerHTML = 'Error calculating output.';
-                dogMessage.innerText = '"Grrr... Couldn’t fetch the price, try again pup!"';
+                dogMessage.innerText = getRandomMessage('calcFail');
             }
         }
 
@@ -648,13 +751,13 @@
             const dogMessage = document.getElementById('dogMessage');
             if (!web3 || !account || !toToken) {
                 document.getElementById('networkStatus').innerText = "Please connect wallet and select tokens.";
-                dogMessage.innerText = '"Woof? Missing something, pup! Check your setup!"';
+                dogMessage.innerText = getRandomMessage('swapNoToken');
                 return;
             }
             const amountIn = document.getElementById('fromAmount').value;
             if (!amountIn || amountIn <= 0) {
                 document.getElementById('networkStatus').innerText = "Please enter a valid amount.";
-                dogMessage.innerText = '"Arf! No amount? How am I supposed to swap air?!"';
+                dogMessage.innerText = getRandomMessage('swapNoAmount');
                 return;
             }
             const amountInWei = web3.utils.toWei(amountIn, 'ether');
@@ -675,7 +778,7 @@
             }
             if (bestOutput === 0) {
                 document.getElementById('networkStatus').innerText = "No valid trading pair found.";
-                dogMessage.innerText = '"Grrr... No path to swap these bones, pup!"';
+                dogMessage.innerText = getRandomMessage('calcFail');
                 return;
             }
             const routes = [{ from: fromToken.address, to: toToken.address, stable: bestStable }];
@@ -683,7 +786,7 @@
             const amountOutMin = amounts[amounts.length - 1] * (1 - defaultSlippage);
             try {
                 document.getElementById('networkStatus').innerText = "Processing swap...";
-                dogMessage.innerText = '"Woof woof! Swapping time, let’s fetch those tokens!"';
+                dogMessage.innerText = getRandomMessage('swapStart');
                 if (!fromToken.isNative) {
                     await approveToken(fromToken.address, amountInWei);
                 }
@@ -704,13 +807,13 @@
                     ).send({ from: account });
                 }
                 document.getElementById('networkStatus').innerText = "Swap successful!";
-                dogMessage.innerText = '"Arf arf! Swap done, you’re a Woofswap champ!"';
+                dogMessage.innerText = getRandomMessage('swapSuccess');
                 document.getElementById('fromAmount').value = '';
                 await updateBalances();
             } catch (error) {
                 console.error("Swap failed:", error);
                 document.getElementById('networkStatus').innerText = "Swap failed: " + (error.message || "Unknown error");
-                dogMessage.innerText = '"Grrr... Swap didn’t work, let’s try again, pup!"';
+                dogMessage.innerText = getRandomMessage('swapFail');
             }
         }
     </script>
