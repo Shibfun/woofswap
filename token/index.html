@@ -259,7 +259,7 @@
 
         // Function to get the current RPC URL (if on Shibarium network)
         async function getCurrentRpcUrl(provider) {
-            const shibariumRpcUrls = ['https://www.shibrpc.com', 'https://rpc.shibrpc.com'];
+            const shibariumRpcUrls = ['https://rpc.shibrpc.com', 'https://www.shibrpc.com'];
             try {
                 const chainId = await provider.request({ method: 'eth_chainId' });
                 if (chainId === '0x6d') { // If already on Shibarium
@@ -328,7 +328,7 @@
                 alert('Shibarium network added with BONE icon!\nIf the BONE icon does not appear, try adding WBONE as a token (already in the list) or update your wallet to the latest version.');
             } catch (error) {
                 console.error('Error adding Shibarium network:', error);
-                alert('Failed to add Shibarium network. Error: ' + (error.message || 'Unknown error') + '\nPlease ensure your wallet allows adding custom networks, or manually add Shibarium (Chain ID: 109, RPC: https://www.shibrpc.com, Symbol: BONE).');
+                alert('Failed to add Shibarium network. Error: ' + (error.message || 'Unknown error') + '\nPlease ensure your wallet allows adding custom networks, or manually add Shibarium (Chain ID: 109, RPC: https://rpc.shibrpc.com, Symbol: BONE).');
             }
         }
 
