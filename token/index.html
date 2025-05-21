@@ -181,7 +181,7 @@
             { address: "0x2Ad268Ff2A0d444eE31EB2E7DB63894D876F5B2c", symbol: "pBONE", decimals: 18, logo: "https://woofswap.finance/image/tokens/BONE.png" },
             { address: "0x03ac57bd3e68c839f5141679bde73438ddb758be", symbol: "SHY", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/shy.png" },
             { address: "0x14d267a184c2a7b37848d3e49e2c782f3edc5e6b", symbol: "KAAL", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/kaal.png" },
-            { address: "0x2e6f5a65920b6b1b601e31675906ed6317170642", symbol: "LC", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/lc.png" },
+            { address: "0x2e6f5a65920b6b1b601e31675906ed6317170642", symbol: "LC", decimals: 18, logo: "https://woofswap.finance/image/tokens/lc.png" },
             { address: "0xeE824089E12715c4072D5EC64f4e59e1F041F3db", symbol: "SPET", decimals: 18, logo: "https://woofswap.finance/image/tokens/SPET.png" },
             { address: "0x3E07514349f5837fC6aE7A996b4D8E4d79a5F487", symbol: "SOME", decimals: 18, logo: "https://woofswap.finance/image/tokens/some.png" },
             { address: "0x0C7f96C5f141Df976f8680044082c48C351f8906", symbol: "WILD", decimals: 18, logo: "https://woofswap.finance/image/tokens/WILD.png" },
@@ -259,7 +259,7 @@
 
         // Function to get the current RPC URL (if on Shibarium network)
         async function getCurrentRpcUrl(provider) {
-            const shibariumRpcUrls = ['https://rpc.shibrpc.com', 'https://www.shibrpc.com'];
+            const shibariumRpcUrls = ['https://www.shibrpc.com', 'https://rpc.shibrpc.com'];
             try {
                 const chainId = await provider.request({ method: 'eth_chainId' });
                 if (chainId === '0x6d') { // If already on Shibarium
@@ -299,7 +299,7 @@
                 const chainId = await provider.request({ method: 'eth_chainId' });
 
                 if (chainId === shibariumChainId) {
-                    alert('You are already on the Shibarium network!\nTo set the BONE icon, you need to:\n1. Remove the Shibarium network from your wallet (MetaMask: Network dropdown -> Shibarium -> Delete).\n2. Click this button again to re-add the network with the BONE icon.\nAlternatively, you can add WBONE as a token (already in the list below) to display the BONE icon.');
+                    alert('You are already on the Shibarium network!\nTo set the BONE icon for the native token, you need to:\n1. Remove the Shibarium network from your wallet (MetaMask: Network dropdown -> Shibarium -> Delete).\n2. Click this button again to re-add the network with the BONE icon.\nAlternatively, you can add WBONE as a token (already in the list below) to display the BONE icon.');
                     return;
                 }
 
@@ -313,7 +313,7 @@
                             name: 'BONE',
                             symbol: 'BONE',
                             decimals: 18,
-                            iconUrls: [boneIconUrl]
+                            iconUrls: [boneIconUrl] // Set icon for the native token BONE
                         },
                         rpcUrls: [currentRpcUrl],
                         blockExplorerUrls: ['https://www.shibariumscan.io']
@@ -325,10 +325,20 @@
                     params: [{ chainId: shibariumChainId }]
                 });
 
-                alert('Shibarium network added with BONE icon!\nIf the BONE icon does not appear, try adding WBONE as a token (already in the list) or update your wallet to the latest version.');
+                alert('Shibarium network added with BONE icon!\nIf the BONE icon does not appear, your wallet may not support the "iconUrls" field. Try adding WBONE as a token (already in the list) or update your wallet to the latest version.');
             } catch (error) {
                 console.error('Error adding Shibarium network:', error);
-                alert('Failed to add Shibarium network. Error: ' + (error.message || 'Unknown error') + '\nPlease ensure your wallet allows adding custom networks, or manually add Shibarium (Chain ID: 109, RPC: https://rpc.shibrpc.com, Symbol: BONE).');
+                let errorMessage = 'Failed to add Shibarium network.\n';
+                if (error.code === 4001) {
+                    errorMessage += 'You rejected the request. Please approve the network addition in your wallet.';
+                } else if (error.message && error.message.includes('already exists')) {
+                    errorMessage += 'Shibarium network already exists in your wallet. Please remove it (MetaMask: Network dropdown -> Shibarium -> Delete) and try again.';
+                } else if (error.message && error.message.includes('rpc')) {
+                    errorMessage += 'The RPC URL may be unavailable. Please check your internet connection or try again later.';
+                } else {
+                    errorMessage += 'Error: ' + (error.message || 'Unknown error') + '\nPlease ensure your wallet allows adding custom networks, or manually add Shibarium (Chain ID: 109, RPC: https://www.shibrpc.com, Symbol: BONE).';
+                }
+                alert(errorMessage);
             }
         }
 
