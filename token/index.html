@@ -307,7 +307,7 @@
                     </div>
                     <div class="token-decimals">${token.decimals}</div>
                     <button class="add-button" onclick="addToken('${token.address}', '${token.symbol}', ${token.decimals}, '${token.logo}')">
-                        ${name ? `Add to ${name}` : 'Add to Wallet'}
+                        ${name ? `${name}` : 'Add to Wallet'}
                     </button>
                     <div class="token-balance" id="balance-${token.address}">-</div>
                 </div>
