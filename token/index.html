@@ -86,7 +86,7 @@
 
         .token-row {
             display: grid;
-            grid-template-columns: 48px 80px 1fr 60px 100px 1fr;
+            grid-template-columns: 48px 80px 1fr 60px 100px;
             align-items: center;
             background-color: white;
             padding: 12px;
@@ -144,20 +144,13 @@
             text-align: center;
         }
 
-        .token-balance {
-            font-size: clamp(12px, 3vw, 14px);
-            color: var(--text-primary);
-            text-align: right;
-            padding-right: 8px;
-        }
-
         @media (max-width: 600px) {
             body {
                 padding: 12px;
             }
 
             .token-row {
-                grid-template-columns: 40px 60px 1fr 50px 80px 1fr;
+                grid-template-columns: 40px 60px 1fr 50px 80px;
                 padding: 8px;
             }
 
@@ -182,8 +175,8 @@
     <h2>Add Shibarium Token to Wallet</h2>
     <div class="wallet-info" id="walletInfo">Detecting wallet...</div>
     <div class="search-container">
-        <input type="text" class="search-input" id="searchAddress" placeholder="Enter wallet address">
-        <button class="search-button" onclick="searchBalances()">Search Balances</button>
+        <input type="text" class="search-input" id="searchSymbol" placeholder="Enter token symbol (e.g., BONE)">
+        <button class="search-button" onclick="filterTokens()">Search Tokens</button>
     </div>
     <div class="token-list" id="tokenList"></div>
 
@@ -221,98 +214,14 @@
             { address: "0x3a1adB8Ef2a37Fe127Aa62B2Fc0399a4A6AD9D79", symbol: "USAGI", decimals: 18, logo: "https://woofswap.finance/image/tokens/Usagi.png" },
             { address: "0x2778f7E40D90DB18203Ec31C9c5F84fde6cf6763", symbol: "SNOW", decimals: 18, logo: "https://woofswap.finance/image/tokens/Snow.png" },
             { address: "0x00E661BDABaB03872018c893f548B9F2ab36f6AA", symbol: "SHRUG", decimals: 18, logo: "https://woofswap.finance/image/tokens/shrug.png" },
-            { address: "0xE3BdfeaF344cB0A3050B8a14425f9c8561313AfE", symbol: "HAM", decimals: 18, logo: "https://woofswap.finance/image/tokens/ham.png" },
-            { address: "0x23E2B4B5d33A2cF70f2d60C95E90AF7cC9Bf8Bf2", symbol: "MOMO", decimals: 18, logo: "https://woofswap.finance/image/tokens/momo.png" },
-            { address: "0xb34d6b4856AF54F841A6FFc6e3bf76d1e73e078c", symbol: "CLUB", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/club.png" },
-            { address: "0x590E1e6db85e507D95aee5382A87cfea4E95d114", symbol: "PUPPY", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/puppy.png" },
-            { address: "0x5c4f0350420B9a571FcE6eF856f70136BCC229bd", symbol: "MSGA", decimals: 18, logo: "https://woofswap.finance/image/tokens/msga.png" },
-            { address: "0xb0Ea6B6aB210d6eeCd248E2E9274aeD01037437b", symbol: "CHEESE", decimals: 18, logo: "https://woofswap.finance/image/tokens/cheese.png" },
-            { address: "0x740765a5B46A1c47b63Dd3b16CA8c7ff25136E2E", symbol: "wWOOF", decimals: 18, logo: "https://woofswap.finance/image/tokens/WOOF.png" },
-            { address: "0x3DeB916d933DEfeb2663b60E8cA7F5f3ADE51087", symbol: "WFEED", decimals: 18, logo: "https://woofswap.finance/image/tokens/feed.png" },
-            { address: "0x2Ad268Ff2A0d444eE31EB2E7DB63894D876F5B2c", symbol: "pBONE", decimals: 18, logo: "https://woofswap.finance/image/tokens/BONE.png" },
-            { address: "0x03ac57bd3e68c839f5141679bde73438ddb758be", symbol: "SHY", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/shy.png" },
-            { address: "0x14d267a184c2a7b37848d3e49e2c782f3edc5e6b", symbol: "KAAL", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/kaal.png" },
-            { address: "0x2e6f5a65920b6b1b601e31675906ed6317170642", symbol: "LC", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/lc.png" },
-            { address: "0xeE824089E12715c4072D5EC64f4e59e1F041F3db", symbol: "SPET", decimals: 18, logo: "https://woofswap.finance/image/tokens/SPET.png" },
-            { address: "0x3E07514349f5837fC6aE7A996b4D8E4d79a5F487", symbol: "SOME", decimals: 18, logo: "https://woofswap.finance/image/tokens/some.png" },
-            { address: "0x0C7f96C5f141Df976f8680044082c48C351f8906", symbol: "WILD", decimals: 18, logo: "https://woofswap.finance/image/tokens/WILD.png" },
-            { address: "0x6973BCdFF5Ad59849d8E2dce6ad9066a259fbE92", symbol: "sunwukong", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/sunwukong.png" },
-            { address: "0x60Af8e3BCa91E68B3d36141E0f3403C316004Af5", symbol: "MWRX", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/MWRX.png" },
-            { address: "0x93060BF9540541BC00F6D5f144Ba3C0C9ed871f5", symbol: "Ryka", decimals: 18, logo: "https://woofswap.finance/image/tokens/Ryka.png" },
-            { address: "0x12C94d3A30daa09f81Ea6c037004E6e99A4A3dfc", symbol: "RIC", decimals: 18, logo: "https://woofswap.finance/image/tokens/ric.png" },
-            { address: "0x3751D1A5e0CdDD08BF91A8e115E44BA5359e52B1", symbol: "RYOSHI", decimals: 18, logo: "https://woofswap.finance/image/tokens/RYOSHI.png" },
-            { address: "0xee70777c4649b7937a86343f5a54718892572859", symbol: "SHYTOSHI", decimals: 9, logo: "https://www.woofswap.finance/image/tokens/SHYTOSHI1.png" },
-            { address: "0x2391dcba821442515cc9b12c5329efccbf93ec11", symbol: "OSKS", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/osks.png" },
-            { address: "0x8cc82045e761329fa13c9b0a0a31d76615fec109", symbol: "CFUN", decimals: 18, logo: "https://woofswap.finance/image/tokens/CFUN.png" },
-            { address: "0xe40545f5093556f260c0f2390e19314b6bc93ee5", symbol: "Zen", decimals: 18, logo: "https://woofswap.finance/image/tokens/zen.png" },
-            { address: "0x5cebbbbf953adc8ea4a20a6bb434be1e5ff94959", symbol: "SRS", decimals: 18, logo: "https://woofswap.finance/image/tokens/12.png" },
-            { address: "0xe10EeeE98F64bFc3BB308A724Df7f22717DFa7Cb", symbol: "SHIT", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/Shit.png" },
-            { address: "0x9d165fb5686Ed8287D852dF546a86DF4bDb9D4ad", symbol: "DogeFamily", decimals: 18, logo: "https://woofswap.finance/image/tokens/DogeFamily.png" },
-            { address: "0xE5EdB55ba86be2bdF1bFcA959DC2D44266aB4171", symbol: "choker", decimals: 18, logo: "https://woofswap.finance/image/tokens/choker.png" }
-        ];
-
-        const erc20Abi = [
-            {
-                constant: true,
-                inputs: [{ name: "_owner", type: "address" }],
-                name: "balanceOf",
-                outputs: [{ name: "balance", type: "uint256" }],
-                type: "function"
-            }
-        ];
-
-        const SHIBARIUM_CONFIG = {
-            chainId: '0x6d',
-            rpcUrl: 'https://www.shibrpc.com',
-            symbol: 'BONE',
-            explorer: 'https://www.shibariumscan.io'
-        };
-
-        const batchSize = 5;
-        const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-        const balanceCache = {};
-
-        const withRetry = async (fn, retries = 3, delayMs = 1000) => {
-            for (let i = 0; i < retries; i++) {
-                try {
-                    return await fn();
-                } catch (error) {
-                    if (i === retries - 1) throw error;
-                    await delay(delayMs);
-                }
-            }
-        };
-
-        const detectWallet = () => {
-            const provider = window.ethereum || window.walletConnect;
-            if (!provider) return { name: null, provider: null };
-
-            const walletNames = [
-                { check: 'isMetaMask', name: 'MetaMask' },
-                { check: 'isOkxWallet', name: 'OKX Wallet' },
-                { check: 'isTrustWallet', name: 'Trust Wallet' },
-                { check: 'isCoinbaseWallet', name: 'Coinbase Wallet' },
-                { check: 'isBitget', name: 'Bitget Wallet' },
-                { check: 'isRabby', name: 'Rabby Wallet' }
-            ];
-
-            for (const { check, name } of walletNames) {
-                if (provider[check]) return { name, provider };
-            }
-            return window.walletConnect ? { name: 'WalletConnect', provider } : { name: 'Unknown Wallet', provider };
-        };
-
-        const updateWalletInfo = () => {
-            const walletInfo = document.getElementById('walletInfo');
-            const { name } = detectWallet();
-            walletInfo.textContent = name
+            { address: "0xE3BdfeaF344cB0A3050B8a14425f9c8561313AfE", symbol: "HAM", decimals: 18, logo: walletInfo.textContent = name
                 ? `Detected wallet: ${name}`
                 : 'No wallet detected. Please install a compatible wallet (e.g., MetaMask).';
         };
 
-        const generateTokenList = () => {
+        const generateTokenList = (filteredTokens = tokens) => {
             const container = document.getElementById('tokenList');
-            container.innerHTML = tokens.map(token => `
+            container.innerHTML = filteredTokens.map(token => `
                 <div class="token-row">
                     <img src="${token.logo}" class="token-logo" alt="${token.symbol} logo">
                     <div class="token-symbol">${token.symbol}</div>
@@ -321,71 +230,16 @@
                     </div>
                     <div class="token-decimals">${token.decimals}</div>
                     <button class="add-button" onclick="addToken('${token.address}', '${token.symbol}', ${token.decimals}, '${token.logo}')">ADD</button>
-                    <div class="token-balance" id="balance-${token.address}">-</div>
                 </div>
             `).join('');
         };
 
-        const isValidAddress = address => /^0x[a-fA-F0-9]{40}$/.test(address);
-
-        const searchBalances = async () => {
-            const address = document.getElementById('searchAddress').value.trim();
-            if (!isValidAddress(address)) {
-                alert('Please enter a valid Ethereum address (e.g., 0x123...).');
-                return;
-            }
-
-            const { provider } = detectWallet();
-            if (!provider) {
-                alert('Please install a compatible wallet (e.g., MetaMask).');
-                return;
-            }
-
-            try {
-                const chainId = await provider.request({ method: 'eth_chainId' });
-                if (chainId !== SHIBARIUM_CONFIG.chainId) {
-                    alert(`Please switch to Shibarium (Chain ID: 109). Add Shibarium with:\n- RPC: ${SHIBARIUM_CONFIG.rpcUrl}\n- Chain ID: 109\n- Symbol: ${SHIBARIUM_CONFIG.symbol}\n- Explorer: ${SHIBARIUM_CONFIG.explorer}`);
-                    return;
-                }
-
-                const web3 = new Web3(SHIBARIUM_CONFIG.rpcUrl);
-                for (let i = 0; i < tokens.length; i += batchSize) {
-                    const batch = tokens.slice(i, i + batchSize);
-                    const balancePromises = batch.map(async token => {
-                        const balanceElement = document.getElementById(`balance-${token.address}`);
-                        const cacheKey = `${address}:${token.address}`;
-                        
-                        if (balanceCache[cacheKey]) {
-                            balanceElement.textContent = balanceCache[cacheKey];
-                            return;
-                        }
-
-                        balanceElement.textContent = 'Loading...';
-                        try {
-                            const contract = new web3.eth.Contract(erc20Abi, token.address);
-                            const balance = await withRetry(() => contract.methods.balanceOf(address).call());
-                            const unit = token.decimals === 18 ? 'ether' : token.decimals === 6 ? 'mwei' : 'ether';
-                            const balanceInUnits = web3.utils.fromWei(balance, unit);
-                            const displayBalance = `${parseFloat(balanceInUnits).toFixed(4)} ${token.symbol}`;
-                            balanceElement.textContent = displayBalance;
-                            balanceCache[cacheKey] = displayBalance;
-                        } catch (error) {
-                            console.error(`Error fetching balance for ${token.symbol}:`, error);
-                            const errorMessage = error.message.includes('timeout') ? 'Request timed out' :
-                                                error.message.includes('revert') ? 'Contract error' :
-                                                'Failed to fetch balance';
-                            balanceElement.textContent = errorMessage;
-                        }
-                    });
-                    await Promise.all(balancePromises);
-                    await delay(1000);
-                }
-            } catch (error) {
-                console.error('Error searching balances:', error);
-                alert('Failed to fetch balances. Ensure Shibarium network is selected and RPC is available.');
-                tokens.forEach(token => {
-                    document.getElementById(`balance-${token.address}`).textContent = '-';
-                });
+        const filterTokens = () => {
+            const searchTerm = document.getElementById('searchSymbol').value.trim().toUpperCase();
+            const filteredTokens = tokens.filter(token => token.symbol.toUpperCase().includes(searchTerm));
+            generateTokenList(filteredTokens);
+            if (filteredTokens.length === 0) {
+                document.getElementById('tokenList').innerHTML = '<div style="text-align: center; color: var(--text-secondary);">No tokens found.</div>';
             }
         };
 
