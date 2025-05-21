@@ -181,7 +181,7 @@
             { address: "0x2Ad268Ff2A0d444eE31EB2E7DB63894D876F5B2c", symbol: "pBONE", decimals: 18, logo: "https://woofswap.finance/image/tokens/BONE.png" },
             { address: "0x03ac57bd3e68c839f5141679bde73438ddb758be", symbol: "SHY", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/shy.png" },
             { address: "0x14d267a184c2a7b37848d3e49e2c782f3edc5e6b", symbol: "KAAL", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/kaal.png" },
-            { address: "0x2e6f5a65920b6b1b601e31675906ed6317170642", symbol: "LC", decimals: 18, logo: "https://woofswap.finance/image/tokens/lc.png" },
+            { address: "0x2e6f5a65920b6b1b601e31675906ed6317170642", symbol: "LC", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/lc.png" },
             { address: "0xeE824089E12715c4072D5EC64f4e59e1F041F3db", symbol: "SPET", decimals: 18, logo: "https://woofswap.finance/image/tokens/SPET.png" },
             { address: "0x3E07514349f5837fC6aE7A996b4D8E4d79a5F487", symbol: "SOME", decimals: 18, logo: "https://woofswap.finance/image/tokens/some.png" },
             { address: "0x0C7f96C5f141Df976f8680044082c48C351f8906", symbol: "WILD", decimals: 18, logo: "https://woofswap.finance/image/tokens/WILD.png" },
@@ -334,7 +334,7 @@
                 } else if (error.message && error.message.includes('already exists')) {
                     errorMessage += 'Shibarium network already exists in your wallet. Please remove it (MetaMask: Network dropdown -> Shibarium -> Delete) and try again.';
                 } else if (error.message && error.message.includes('rpc')) {
-                    errorMessage += 'The RPC URL may be unavailable. Please check your internet connection or try again later.';
+                    errorMessage += 'The RPC URL may be unavailable. Please check your internet connection or try again later.\nYou can also manually add Shibarium (Chain ID: 109, RPC: https://www.shibrpc.com, Symbol: BONE).';
                 } else {
                     errorMessage += 'Error: ' + (error.message || 'Unknown error') + '\nPlease ensure your wallet allows adding custom networks, or manually add Shibarium (Chain ID: 109, RPC: https://www.shibrpc.com, Symbol: BONE).';
                 }
