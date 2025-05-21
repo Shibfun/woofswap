@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Shibarium Token to MetaMask</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+        .token-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .token-row {
+            display: grid;
+            grid-template-columns: 60px 100px 300px 80px 120px;
+            align-items: center;
+            background-color: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .token-row:hover {
+            transform: translateY(-2px);
+        }
+        .token-logo {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+        .token-symbol {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        .token-address {
+            font-size: 14px;
+            color: #666;
+            word-break: break-all;
+        }
+        .token-decimals {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        .add-button {
+            padding: 8px 16px;
+            font-size: 14px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .add-button:hover {
+            background-color: #0056b3;
+        }
+        @media (max-width: 600px) {
+            .token-row {
+                grid-template-columns: 50px 80px 1fr 60px 100px;
+                font-size: 12px;
+            }
+            .token-logo {
+                width: 30px;
+                height: 30px;
+            }
+            .add-button {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2>Add Shibarium Token to MetaMask</h2>
+    <div class="token-list" id="tokenList"></div>
+
+    <script>
+        const tokens = [
+            { address: "0x839FdB6cc98342B428E074C1573ADF6D48CA3bFd", symbol: "WBONE", decimals: 18, logo: "https://woofswap.finance/image/tokens/BONE.png" },
+            { address: "0xf010f12dcA0b96D2d6685bf4dB3dbB4Ad500B6Ad", symbol: "USDC", decimals: 6, logo: "https://woofswap.finance/image/tokens/USDC.png" },
+            { address: "0xaB082b8ad96c7f47ED70ED971Ce2116469954cFB", symbol: "USDT", decimals: 6, logo: "https://woofswap.finance/image/tokens/USDT.png" },
+            { address: "0xD0daa7B6ff1B40d3cc6F0B2Cf7E85cB993D1c834", symbol: "WOOF", decimals: 18, logo: "https://woofswap.finance/image/tokens/WOOF.png" },
+            { address: "0x495eea66B0f8b636D441dC6a98d8F5C3D455C4c0", symbol: "SHIB", decimals: 18, logo: "https://woofswap.finance/image/tokens/SHIB.png" },
+            { address: "0x65218A41Fb92637254B4f8c97448d3dF343A3064", symbol: "LEASH", decimals: 18, logo: "https://woofswap.finance/image/tokens/LEASH.png" },
+            { address: "0x3a431896634B04aB7363a97Ed2cbCd88ec75c38a", symbol: "SOON", decimals: 18, logo: "https://woofswap.finance/image/tokens/SOON.png" },
+            { address: "0xC9492fb618f44247458d87AA262a205754216d0C", symbol: "PUNK", decimals: 18, logo: "https://woofswap.finance/image/tokens/PUNK.png" },
+            { address: "0x8ed7d143Ef452316Ab1123d28Ab302dC3b80d3ce", symbol: "WETH", decimals: 18, logo: "https://woofswap.finance/image/tokens/ETH.png" },
+            { address: "0x5bbdb90dafc39ac324148075cc73a02355ccf3c0", symbol: "BONES", decimals: 18, logo: "https://woofswap.finance/image/tokens/BONES1.png" },
+            { address: "0x0726959d22361B79e4D50A5D157b044A83eC870d", symbol: "DAI", decimals: 18, logo: "https://woofswap.finance/image/tokens/DAI.png" },
+            { address: "0x1327Bc16c3Ad5A0a54d72Ef15FB8Da9259FEB7b6", symbol: "ELON", decimals: 18, logo: "https://woofswap.finance/image/tokens/BMELON.png" },
+            { address: "0xC76F4c819D820369Fb2d7C1531aB3Bb18e6fE8d8", symbol: "WBONE-SHIB", decimals: 18, logo: "https://woofswap.finance/image/tokens/WBONE_SHIB.png" },
+            { address: "0x3751D1A5e0CdDD08BF91A8e115E44BA5359e52B1", symbol: "RYOSHI", decimals: 18, logo: "https://woofswap.finance/image/tokens/RYOSHI.png" },
+            { address: "0x2F23F941f7c29925b0B8375473c9C2b0Ea7e9579", symbol: "SIYC", decimals: 18, logo: "https://woofswap.finance/image/tokens/SIYC.png" },
+            { address: "0x94215462CE26bD6054bad8de97bCB8233317c3aC", symbol: "APES", decimals: 18, logo: "https://woofswap.finance/image/tokens/APES.png" },
+            { address: "0x2761723006d3Eb0d90B19B75654DbE543dcd974f", symbol: "CHEWY", decimals: 18, logo: "https://woofswap.finance/image/tokens/ChewySwap.png" },
+            { address: "0xABbAF2746C46f8F269e0a252285ABE9d8D8CDf63", symbol: "MSWAPF", decimals: 18, logo: "https://woofswap.finance/image/tokens/MSWAPF.png" },
+            { address: "0xeE824089E12715c4072D5EC64f4e59e1F041F3db", symbol: "SPET", decimals: 18, logo: "https://woofswap.finance/image/tokens/SPET.png" },
+            { address: "0xeCe898EdCc0AF91430603175F945D8de75291c70", symbol: "DAMN", decimals: 18, logo: "https://woofswap.finance/image/tokens/DAMN.png?t=111" },
+            { address: "0xee70777c4649b7937a86343f5a54718892572859", symbol: "SHYTOSHI", decimals: 9, logo: "https://www.woofswap.finance/image/tokens/SHYTOSHI1.png" },
+            { address: "0x0b4FD6288b6d32171CC515bfFC9340026F56A358", symbol: "PIKA", decimals: 18, logo: "https://woofswap.finance/image/tokens/PIKA.png" },
+            { address: "0x4B713B86Be62b448B172Da6D8144d3E55Da63C9b", symbol: "MPEN", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/MPEN.png" },
+            { address: "0x7f816954BAe96fDCc79A06583446232111613C7A", symbol: "SHIB314", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/shib314.png" },
+            { address: "0xdac5b1d8d9c9616382d8956fcd106675a8e95724", symbol: "Shibmap", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/shibmap.png" },
+            { address: "0xf7b9897575E7f5A00732d58Ee5ff1591964167A6", symbol: "PDD", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/pdd.png" },
+            { address: "0xB9Ae1d4e474CC154F48e5C2f0559Eb3A78Ad1F09", symbol: "SHIBS", decimals: 18, logo: "https://woofswap.finance/image/tokens/shibss.png" },
+            { address: "0xDa4cdA845A8c539b7fcb750e79458BfA3Ec2c774", symbol: "PUNK", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/ShibizensPunk.png" },
+            { address: "0x02771c6eBf40c2a277a197Efd2d530920D77282e", symbol: "CARD", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/card.png" },
+            { address: "0xE1B4134267c2Aa17fE033E5B64576323390bA114", symbol: "BONES", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/boness.png" },
+            { address: "0x73604Ed09B76648063AAe4454f91510a913589EB", symbol: "WOOFS", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/woofss.png" },
+            { address: "0xFbbEd1D93b5C0AA7C8b2a3E9a67E8E8280Fe757b", symbol: "BINU", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/binu.png" },
+            { address: "0x487686Ef45dA292f827b48Ad1f81c4e2ce5ddf87", symbol: "DOGES", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/dogess.png" },
+            { address: "0x99CdDd5A52DD4122B6A75AFC0D4DAE6355df5d56", symbol: "PEPE", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/pepess.png" },
+            { address: "0x80A103F87De851a8F45A26C9694c2352f6608c6A", symbol: "PUNKS", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/punkss.png" },
+            { address: "0xfAdc241118b5C02e69e6aCDeE50f7CcBcc1F2795", symbol: "SBTC", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/SBTC.png" },
+            { address: "0x2391dcba821442515cc9b12c5329efccbf93ec11", symbol: "OSKS", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/osks.png" },
+            { address: "0x8cc82045e761329fa13c9b0a0a31d76615fec109", symbol: "CFUN", decimals: 18, logo: "https://woofswap.finance/image/tokens/CFUN.png" },
+            { address: "0x3E07514349f5837fC6aE7A996b4D8E4d79a5F487", symbol: "SOME", decimals: 18, logo: "https://woofswap.finance/image/tokens/some.png" },
+            { address: "0x91fbB2503AC69702061f1AC6885759Fc853e6EaE", symbol: "KNINE", decimals: 18, logo: "https://woofswap.finance/image/tokens/KNINE.png" },
+            { address: "0x0C7f96C5f141Df976f8680044082c48C351f8906", symbol: "WILD", decimals: 18, logo: "https://woofswap.finance/image/tokens/WILD.png" },
+            { address: "0x6973BCdFF5Ad59849d8E2dce6ad9066a259fbE92", symbol: "sunwukong", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/sunwukong.png" },
+            { address: "0x60Af8e3BCa91E68B3d36141E0f3403C316004Af5", symbol: "MWRX", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/MWRX.png" },
+            { address: "0x9f56cba9c3d4cd9f3d7b899ea0ff8292fe8264a8", symbol: "dudu", decimals: 18, logo: "https://woofswap.finance/image/tokens/dudu.png" },
+            { address: "0x3358FCA51d7C0408750FBbE7777012E0b67C027F", symbol: "knBONE", decimals: 18, logo: "https://woofswap.finance/image/tokens/knbone.png" },
+            { address: "0xe40545f5093556f260c0f2390e19314b6bc93ee5", symbol: "Zen", decimals: 18, logo: "https://woofswap.finance/image/tokens/zen.png" },
+            { address: "0x5cebbbbf953adc8ea4a20a6bb434be1e5ff94959", symbol: "SRS", decimals: 18, logo: "https://woofswap.finance/image/tokens/12.png" },
+            { address: "0xe9Cb2D7ADC24Fc59FE00D6C0A0669BDF16805Fe0", symbol: "FEED", decimals: 18, logo: "https://woofswap.finance/image/tokens/feed.png" },
+            { address: "0x8f4b11d923BbAA6206f3Dd3ff84e8e31bafB49b7", symbol: "WOW", decimals: 18, logo: "https://woofswap.finance/image/tokens/wow.png" },
+            { address: "0x632d1FF1fB27d88EDeDB90e70bFC094D7932A0ad", symbol: "SHIPA", decimals: 18, logo: "https://woofswap.finance/image/tokens/shipa.png" },
+            { address: "0xdE22A4F6C94507898442465d32a03871E4dc11Eb", symbol: "PNUTSHIB", decimals: 18, logo: "https://woofswap.finance/image/tokens/pnutshib.png" },
+            { address: "0x95e9F2Bf576DbA036A38e9659167788b518e56bb", symbol: "SHIFU", decimals: 18, logo: "https://woofswap.finance/image/tokens/shifu.png" },
+            { address: "0xb34d6b4856AF54F841A6FFc6e3bf76d1e73e078c", symbol: "CLUB", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/club.png" },
+            { address: "0x590E1e6db85e507D95aee5382A87cfea4E95d114", symbol: "PUPPY", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/puppy.png" },
+            { address: "0x506d8d2d9c715Eb34F514cc3EF48C7aBD19e2bc7", symbol: "TREAT", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/treat.png" },
+            { address: "0x5d63C604803BbF7919953b73c89309B5CBcc227a", symbol: "CANNED", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/CANNED.png" },
+            { address: "0x0cCD687CC6F8461170336D8e8cf46A39313DEab9", symbol: "LUISA", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/luisa.png" },
+            { address: "0xe10EeeE98F64bFc3BB308A724Df7f22717DFa7Cb", symbol: "SHIT", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/Shit.png" },
+            { address: "0x03ac57bd3e68c839f5141679bde73438ddb758be", symbol: "SHY", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/shy.png" },
+            { address: "0x14d267a184c2a7b37848d3e49e2c782f3edc5e6b", symbol: "KAAL", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/kaal.png" },
+            { address: "0x2e6f5a65920b6b1b601e31675906ed6317170642", symbol: "LC", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/lc.png" },
+            { address: "0x2Ad268Ff2A0d444eE31EB2E7DB63894D876F5B2c", symbol: "pBONE", decimals: 18, logo: "https://woofswap.finance/image/tokens/BONE.png" },
+            { address: "0x61CFA29261d8151D39244b8FfCf8DFd2f9DF3839", symbol: "CHIKA", decimals: 18, logo: "https://woofswap.finance/image/tokens/ChikaLogo.png" },
+            { address: "0xb0Ea6B6aB210d6eeCd248E2E9274aeD01037437b", symbol: "CHEESE", decimals: 18, logo: "https://woofswap.finance/image/tokens/cheese.png" },
+            { address: "0x9d165fb5686Ed8287D852dF546a86DF4bDb9D4ad", symbol: "DogeFamily", decimals: 18, logo: "https://woofswap.finance/image/tokens/DogeFamily.png" },
+            { address: "0x63A67329f761517570345eE86f791F74f9DC5461", symbol: "NEKO", decimals: 18, logo: "https://woofswap.finance/image/tokens/neko.png" },
+            { address: "0x64E19b6a167878d2483d166212A3c2c68b1eB842", symbol: "NONE", decimals: 18, logo: "https://woofswap.finance/image/tokens/none.png" },
+            { address: "0x3a1adB8Ef2a37Fe127Aa62B2Fc0399a4A6AD9D79", symbol: "USAGI", decimals: 18, logo: "https://woofswap.finance/image/tokens/Usagi.png" },
+            { address: "0x2778f7E40D90DB18203Ec31C9c5F84fde6cf6763", symbol: "SNOW", decimals: 18, logo: "https://woofswap.finance/image/tokens/Snow.png" },
+            { address: "0xE5EdB55ba86be2bdF1bFcA959DC2D44266aB4171", symbol: "choker", decimals: 18, logo: "https://woofswap.finance/image/tokens/choker.png" },
+            { address: "0x93060BF9540541BC00F6D5f144Ba3C0C9ed871f5", symbol: "Ryka", decimals: 18, logo: "https://woofswap.finance/image/tokens/Ryka.png" },
+            { address: "0x740765a5B46A1c47b63Dd3b16CA8c7ff25136E2E", symbol: "wWOOF", decimals: 18, logo: "https://woofswap.finance/image/tokens/WOOF.png" },
+            { address: "0x3DeB916d933DEfeb2663b60E8cA7F5f3ADE51087", symbol: "WFEED", decimals: 18, logo: "https://woofswap.finance/image/tokens/feed.png" },
+            { address: "0x00E661BDABaB03872018c893f548B9F2ab36f6AA", symbol: "SHRUG", decimals: 18, logo: "https://woofswap.finance/image/tokens/shrug.png" },
+            { address: "0xE3BdfeaF344cB0A3050B8a14425f9c8561313AfE", symbol: "HAM", decimals: 18, logo: "https://woofswap.finance/image/tokens/ham.png" },
+            { address: "0x23E2B4B5d33A2cF70f2d60C95E90AF7cC9Bf8Bf2", symbol: "MOMO", decimals: 18, logo: "https://woofswap.finance/image/tokens/momo.png" },
+            { address: "0xB820c8a74c8E4059661460C414821bC5820470D8", symbol: "TOYS", decimals: 18, logo: "https://woofswap.finance/image/tokens/toys.png" },
+            { address: "0x12C94d3A30daa09f81Ea6c037004E6e99A4A3dfc", symbol: "RIC", decimals: 18, logo: "https://woofswap.finance/image/tokens/ric.png" },
+            { address: "0x52296893764380cdf10316eC9F64b581004C1Fd1", symbol: "GUY", decimals: 18, logo: "https://woofswap.finance/image/tokens/guy.png" },
+            { address: "0x5c4f0350420B9a571FcE6eE856f70136BCC229bd", symbol: "MSGA", decimals: 18, logo: "https://woofswap.finance/image/tokens/msga.png" }
+        ];
+
+        function generateTokenList() {
+            const container = document.getElementById('tokenList');
+            tokens.forEach(token => {
+                const row = document.createElement('div');
+                row.className = 'token-row';
+                row.innerHTML = `
+                    <img src="${token.logo}" class="token-logo" alt="${token.symbol} logo">
+                    <div class="token-symbol">${token.symbol}</div>
+                    <div class="token-address">${token.address}</div>
+                    <div class="token-decimals">${token.decimals}</div>
+                    <button class="add-button" onclick="addShibariumAndToken('${token.address}', '${token.symbol}', ${token.decimals}, '${token.logo}')">Add to MetaMask</button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        async function addShibariumAndToken(address, symbol, decimals, logo) {
+            if (typeof window.ethereum === 'undefined') {
+                alert('Please install MetaMask!');
+                return;
+            }
+
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [{
+                        chainId: '0x6d',
+                        chainName: 'Shibarium',
+                        nativeCurrency: { name: 'BONE', symbol: 'BONE', decimals: 18 },
+                        rpcUrls: ['https://www.shibrpc.com'],
+                        blockExplorerUrls: ['https://www.shibariumscan.io']
+                    }]
+                });
+
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x6d' }]
+                });
+
+                const wasAdded = await window.ethereum.request({
+                    method: 'wallet_watchAsset',
+                    params: {
+                        type: 'ERC20',
+                        options: { address, symbol, decimals, image: logo }
+                    }
+                });
+
+                if (wasAdded) {
+                    alert(`${symbol} added to MetaMask!`);
+                } else {
+                    alert('User cancelled adding token.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to add network or token. Check MetaMask or network settings.');
+            }
+        }
+
+        generateTokenList();
+    </script>
+</body>
+</html>
