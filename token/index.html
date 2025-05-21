@@ -24,6 +24,31 @@
             font-size: 14px;
             margin-bottom: 20px;
         }
+        .add-network-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .add-network-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .add-network-button:hover {
+            background-color: #218838;
+        }
+        .network-logo {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+            border-radius: 50%;
+        }
         .token-list {
             display: flex;
             flex-direction: column;
@@ -89,12 +114,26 @@
                 padding: 6px 12px;
                 font-size: 12px;
             }
+            .add-network-button {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+            .network-logo {
+                width: 20px;
+                height: 20px;
+            }
         }
     </style>
 </head>
 <body>
     <h2>Add Shibarium Token to Wallet</h2>
     <div class="wallet-info" id="walletInfo">Detecting wallet...</div>
+    <div class="add-network-container">
+        <button class="add-network-button" onclick="addShibariumNetworkWithIcon()">
+            <img src="https://woofswap.finance/image/tokens/BONE.png" class="network-logo" alt="BONE logo">
+            Add Shibarium Network with BONE Icon
+        </button>
+    </div>
     <div class="token-list" id="tokenList"></div>
 
     <script>
@@ -142,7 +181,7 @@
             { address: "0x2Ad268Ff2A0d444eE31EB2E7DB63894D876F5B2c", symbol: "pBONE", decimals: 18, logo: "https://woofswap.finance/image/tokens/BONE.png" },
             { address: "0x03ac57bd3e68c839f5141679bde73438ddb758be", symbol: "SHY", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/shy.png" },
             { address: "0x14d267a184c2a7b37848d3e49e2c782f3edc5e6b", symbol: "KAAL", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/kaal.png" },
-            { address: "0x2e6f5a65920b6b1b601e31675906ed6317170642", symbol: "LC", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/lc.png" },
+            { address: "0x2e6f5a65920b6b1b601e31675906ed6317170642", symbol: "LC", decimals: 18, logo: "https://woofswap.finance/image/tokens/lc.png" },
             { address: "0xeE824089E12715c4072D5EC64f4e59e1F041F3db", symbol: "SPET", decimals: 18, logo: "https://woofswap.finance/image/tokens/SPET.png" },
             { address: "0x3E07514349f5837fC6aE7A996b4D8E4d79a5F487", symbol: "SOME", decimals: 18, logo: "https://woofswap.finance/image/tokens/some.png" },
             { address: "0x0C7f96C5f141Df976f8680044082c48C351f8906", symbol: "WILD", decimals: 18, logo: "https://woofswap.finance/image/tokens/WILD.png" },
@@ -198,6 +237,7 @@
             }
         }
 
+        // Generate token list
         function generateTokenList() {
             const container = document.getElementById('tokenList');
             const { name } = detectWallet();
@@ -217,6 +257,84 @@
             });
         }
 
+        // Function to get the current RPC URL (if on Shibarium network)
+        async function getCurrentRpcUrl(provider) {
+            const shibariumRpcUrls = ['https://www.shibrpc.com', 'https://rpc.shibrpc.com'];
+            try {
+                const chainId = await provider.request({ method: 'eth_chainId' });
+                if (chainId === '0x6d') { // If already on Shibarium
+                    // Use a simple JSON-RPC request to check which RPC is currently active
+                    for (const rpcUrl of shibariumRpcUrls) {
+                        try {
+                            const response = await fetch(rpcUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_chainId', params: [], id: 1 })
+                            });
+                            const data = await response.json();
+                            if (data.result === '0x6d') {
+                                return rpcUrl; // Return the RPC URL that matches the current network
+                            }
+                        } catch (error) {
+                            console.warn(`RPC ${rpcUrl} is not responding:`, error);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error detecting current RPC:', error);
+            }
+            // Default to the first RPC if not on Shibarium or detection fails
+            return shibariumRpcUrls[0];
+        }
+
+        // Add Shibarium network with BONE icon
+        async function addShibariumNetworkWithIcon() {
+            const { provider } = detectWallet();
+            if (!provider) {
+                alert('Please install a compatible wallet (e.g., MetaMask, OKX Wallet, Trust Wallet)!');
+                return;
+            }
+
+            try {
+                const shibariumChainId = '0x6d';
+                const boneIconUrl = 'https://woofswap.finance/image/tokens/BONE.png';
+                const currentRpcUrl = await getCurrentRpcUrl(provider);
+                const chainId = await provider.request({ method: 'eth_chainId' });
+
+                // Only add the network if not already on Shibarium
+                if (chainId !== shibariumChainId) {
+                    await provider.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: shibariumChainId,
+                            chainName: 'Shibarium',
+                            nativeCurrency: {
+                                name: 'BONE',
+                                symbol: 'BONE',
+                                decimals: 18,
+                                iconUrls: [boneIconUrl] // Set icon for BONE
+                            },
+                            rpcUrls: [currentRpcUrl],
+                            blockExplorerUrls: ['https://www.shibariumscan.io']
+                        }]
+                    });
+
+                    await provider.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: shibariumChainId }]
+                    });
+
+                    alert('Shibarium network added with BONE icon!');
+                } else {
+                    alert('Already on Shibarium network!');
+                }
+            } catch (error) {
+                console.error('Error adding Shibarium network:', error);
+                alert('Failed to add Shibarium network. Check your wallet or network settings.');
+            }
+        }
+
+        // Add Shibarium network and token
         async function addShibariumAndToken(address, symbol, decimals, logo) {
             const { provider } = detectWallet();
             if (!provider) {
@@ -225,42 +343,33 @@
             }
 
             try {
-                // Check current network
-                const chainId = await provider.request({ method: 'eth_chainId' });
                 const shibariumChainId = '0x6d';
-                const rpcUrls = ['https://www.shibrpc.com', 'https://rpc.shibrpc.com'];
-                let currentRpcIndex = 0;
+                const boneIconUrl = 'https://woofswap.finance/image/tokens/BONE.png';
+                const chainId = await provider.request({ method: 'eth_chainId' });
 
                 if (chainId !== shibariumChainId) {
-                    // If not on Shibarium, try adding the network
-                    let networkAdded = false;
-                    while (currentRpcIndex < rpcUrls.length && !networkAdded) {
-                        try {
-                            await provider.request({
-                                method: 'wallet_addEthereumChain',
-                                params: [{
-                                    chainId: shibariumChainId,
-                                    chainName: 'Shibarium',
-                                    nativeCurrency: { name: 'BONE', symbol: 'BONE', decimals: 18 },
-                                    rpcUrls: [rpcUrls[currentRpcIndex]],
-                                    blockExplorerUrls: ['https://www.shibariumscan.io']
-                                }]
-                            });
+                    // If not on Shibarium, add the network with the current RPC
+                    const currentRpcUrl = await getCurrentRpcUrl(provider);
+                    await provider.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: shibariumChainId,
+                            chainName: 'Shibarium',
+                            nativeCurrency: {
+                                name: 'BONE',
+                                symbol: 'BONE',
+                                decimals: 18,
+                                iconUrls: [boneIconUrl]
+                            },
+                            rpcUrls: [currentRpcUrl],
+                            blockExplorerUrls: ['https://www.shibariumscan.io']
+                        }]
+                    });
 
-                            await provider.request({
-                                method: 'wallet_switchEthereumChain',
-                                params: [{ chainId: shibariumChainId }]
-                            });
-
-                            networkAdded = true;
-                        } catch (error) {
-                            console.error(`Failed with RPC ${rpcUrls[currentRpcIndex]}:`, error);
-                            currentRpcIndex++;
-                            if (currentRpcIndex >= rpcUrls.length) {
-                                throw new Error('All RPC URLs failed.');
-                            }
-                        }
-                    }
+                    await provider.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: shibariumChainId }]
+                    });
                 }
 
                 // Add token
