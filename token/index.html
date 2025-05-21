@@ -50,36 +50,6 @@
         .search-button:hover {
             background-color: #0056b3;
         }
-        .balance-list {
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .balance-row {
-            display: grid;
-            grid-template-columns: 100px 300px 1fr;
-            align-items: center;
-            background-color: white;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .balance-symbol {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-        }
-        .balance-address {
-            font-size: 14px;
-            color: #666;
-            word-break: break-all;
-        }
-        .balance-amount {
-            font-size: 14px;
-            color: #333;
-            text-align: right;
-        }
         .token-list {
             display: flex;
             flex-direction: column;
@@ -88,7 +58,7 @@
         }
         .token-row {
             display: grid;
-            grid-template-columns: 60px 100px 300px 80px 120px;
+            grid-template-columns: 60px 100px 300px 80px 120px 1fr;
             align-items: center;
             background-color: white;
             padding: 12px;
@@ -120,6 +90,12 @@
             color: #666;
             text-align: center;
         }
+        .token-balance {
+            font-size: 14px;
+            color: #333;
+            text-align: right;
+            padding-right: 10px;
+        }
         .add-button {
             padding: 8px 16px;
             font-size: 14px;
@@ -135,11 +111,7 @@
         }
         @media (max-width: 600px) {
             .token-row {
-                grid-template-columns: 50px 80px 1fr 60px 100px;
-                font-size: 12px;
-            }
-            .balance-row {
-                grid-template-columns: 80px 1fr 1fr;
+                grid-template-columns: 50px 80px 1fr 60px 100px 1fr;
                 font-size: 12px;
             }
             .token-logo {
@@ -158,6 +130,9 @@
                 padding: 6px 12px;
                 font-size: 12px;
             }
+            .token-balance {
+                font-size: 12px;
+            }
         }
     </style>
 </head>
@@ -168,7 +143,6 @@
         <input type="text" class="search-input" id="searchAddress" placeholder="Enter wallet address to check balances">
         <button class="search-button" onclick="searchBalances()">Search Balances</button>
     </div>
-    <div class="balance-list" id="balanceList"></div>
     <div class="token-list" id="tokenList"></div>
 
     <script>
@@ -298,6 +272,7 @@
                     <button class="add-button" onclick="addToken('${token.address}', '${token.symbol}', ${token.decimals}, '${token.logo}')">
                         ${name ? `Add to ${name}` : 'Add to Wallet'}
                     </button>
+                    <div class="token-balance" id="balance-${token.address}">-</div>
                 `;
                 container.appendChild(row);
             });
@@ -311,8 +286,6 @@
         // Search balances for the given address
         async function searchBalances() {
             const address = document.getElementById('searchAddress').value.trim();
-            const balanceList = document.getElementById('balanceList');
-            balanceList.innerHTML = ''; // Clear previous results
 
             // Validate address
             if (!isValidAddress(address)) {
@@ -340,34 +313,27 @@
 
                 // Fetch balances for each token
                 for (const token of tokens) {
+                    const balanceElement = document.getElementById(`balance-${token.address}`);
+                    balanceElement.textContent = 'Loading...';
+
                     try {
                         const contract = new web3.eth.Contract(erc20Abi, token.address);
                         const balance = await contract.methods.balanceOf(address).call();
                         const balanceInUnits = web3.utils.fromWei(balance, token.decimals === 18 ? 'ether' : token.decimals === 6 ? 'mwei' : 'ether');
-
-                        const row = document.createElement('div');
-                        row.className = 'balance-row';
-                        row.innerHTML = `
-                            <div class="balance-symbol">${token.symbol}</div>
-                            <div class="balance-address">${token.address}</div>
-                            <div class="balance-amount">${parseFloat(balanceInUnits).toFixed(4)} ${token.symbol}</div>
-                        `;
-                        balanceList.appendChild(row);
+                        balanceElement.textContent = `${parseFloat(balanceInUnits).toFixed(4)} ${token.symbol}`;
                     } catch (error) {
                         console.error(`Error fetching balance for ${token.symbol}:`, error);
-                        const row = document.createElement('div');
-                        row.className = 'balance-row';
-                        row.innerHTML = `
-                            <div class="balance-symbol">${token.symbol}</div>
-                            <div class="balance-address">${token.address}</div>
-                            <div class="balance-amount">Error fetching balance</div>
-                        `;
-                        balanceList.appendChild(row);
+                        balanceElement.textContent = 'Error';
                     }
                 }
             } catch (error) {
                 console.error('Error searching balances:', error);
                 alert('Failed to fetch balances. Please ensure you are on the Shibarium network and the RPC is available.');
+                // Reset all balances to '-' on error
+                tokens.forEach(token => {
+                    const balanceElement = document.getElementById(`balance-${token.address}`);
+                    balanceElement.textContent = '-';
+                });
             }
         }
 
