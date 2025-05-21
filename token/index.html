@@ -180,13 +180,13 @@
             { address: "0x3DeB916d933DEfeb2663b60E8cA7F5f3ADE51087", symbol: "WFEED", decimals: 18, logo: "https://woofswap.finance/image/tokens/feed.png" },
             { address: "0x2Ad268Ff2A0d444eE31EB2E7DB63894D876F5B2c", symbol: "pBONE", decimals: 18, logo: "https://woofswap.finance/image/tokens/BONE.png" },
             { address: "0x03ac57bd3e68c839f5141679bde73438ddb758be", symbol: "SHY", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/shy.png" },
-            { address: "0x14d267a184c2a7b37848d3e49e2c782f3edc5e6b", symbol: "KAAL", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/kaal.png" },
+            { address: "0x14d267a184c2a7b37848d3e49e2c782f3edc5e6b", symbol: "KAAL", decimals: 18, logo: "https://woofswap.finance/image/tokens/kaal.png" },
             { address: "0x2e6f5a65920b6b1b601e31675906ed6317170642", symbol: "LC", decimals: 18, logo: "https://woofswap.finance/image/tokens/lc.png" },
             { address: "0xeE824089E12715c4072D5EC64f4e59e1F041F3db", symbol: "SPET", decimals: 18, logo: "https://woofswap.finance/image/tokens/SPET.png" },
             { address: "0x3E07514349f5837fC6aE7A996b4D8E4d79a5F487", symbol: "SOME", decimals: 18, logo: "https://woofswap.finance/image/tokens/some.png" },
             { address: "0x0C7f96C5f141Df976f8680044082c48C351f8906", symbol: "WILD", decimals: 18, logo: "https://woofswap.finance/image/tokens/WILD.png" },
             { address: "0x6973BCdFF5Ad59849d8E2dce6ad9066a259fbE92", symbol: "sunwukong", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/sunwukong.png" },
-            { address: "0x60Af8e3BCa91E68B3d36141E0f3403C316004Af5", symbol: "MWRX", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/MWRX.png" },
+            { address: "0x60Af8e3BCa91E68B3d36141E0f3403C316004Af5", symbol: "MWRX", decimals: 18, logo: "https://woofswap.finance/image/tokens/MWRX.png" },
             { address: "0x93060BF9540541BC00F6D5f144Ba3C0C9ed871f5", symbol: "Ryka", decimals: 18, logo: "https://woofswap.finance/image/tokens/Ryka.png" },
             { address: "0x12C94d3A30daa09f81Ea6c037004E6e99A4A3dfc", symbol: "RIC", decimals: 18, logo: "https://woofswap.finance/image/tokens/ric.png" },
             { address: "0x3751D1A5e0CdDD08BF91A8e115E44BA5359e52B1", symbol: "RYOSHI", decimals: 18, logo: "https://woofswap.finance/image/tokens/RYOSHI.png" },
@@ -287,7 +287,7 @@
             return shibariumRpcUrls[0];
         }
 
-        // Add Shibarium network with BONE icon
+        // Add Shibarium network with BONE icon (force update even if already on Shibarium)
         async function addShibariumNetworkWithIcon() {
             const { provider } = detectWallet();
             if (!provider) {
@@ -299,38 +299,35 @@
                 const shibariumChainId = '0x6d';
                 const boneIconUrl = 'https://woofswap.finance/image/tokens/BONE.png';
                 const currentRpcUrl = await getCurrentRpcUrl(provider);
-                const chainId = await provider.request({ method: 'eth_chainId' });
 
-                // Only add the network if not already on Shibarium
-                if (chainId !== shibariumChainId) {
-                    await provider.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [{
-                            chainId: shibariumChainId,
-                            chainName: 'Shibarium',
-                            nativeCurrency: {
-                                name: 'BONE',
-                                symbol: 'BONE',
-                                decimals: 18,
-                                iconUrls: [boneIconUrl] // Set icon for BONE
-                            },
-                            rpcUrls: [currentRpcUrl],
-                            blockExplorerUrls: ['https://www.shibariumscan.io']
-                        }]
-                    });
+                // Always attempt to add or update the network configuration
+                await provider.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [{
+                        chainId: shibariumChainId,
+                        chainName: 'Shibarium',
+                        nativeCurrency: {
+                            name: 'BONE',
+                            symbol: 'BONE',
+                            decimals: 18,
+                            iconUrls: [boneIconUrl] // Set icon for BONE
+                        },
+                        rpcUrls: [currentRpcUrl],
+                        blockExplorerUrls: ['https://www.shibariumscan.io']
+                    }]
+                });
 
-                    await provider.request({
-                        method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: shibariumChainId }]
-                    });
+                // Switch to Shibarium network
+                await provider.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: shibariumChainId }]
+                });
 
-                    alert('Shibarium network added with BONE icon!');
-                } else {
-                    alert('Already on Shibarium network!');
-                }
+                // If the icon still doesn't show, prompt user to add WBONE as a fallback
+                alert('Shibarium network added/updated with BONE icon!\nIf the BONE icon does not appear, try adding WBONE as a token (already in the list) or manually refresh your wallet (e.g., restart MetaMask or clear cache).');
             } catch (error) {
                 console.error('Error adding Shibarium network:', error);
-                alert('Failed to add Shibarium network. Check your wallet or network settings.');
+                alert('Failed to add/update Shibarium network. Check your wallet or network settings. You may need to manually add the network or clear your wallet cache.');
             }
         }
 
