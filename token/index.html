@@ -24,31 +24,6 @@
             font-size: 14px;
             margin-bottom: 20px;
         }
-        .add-network-container {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .add-network-button {
-            display: inline-flex;
-            align-items: center;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .add-network-button:hover {
-            background-color: #218838;
-        }
-        .network-logo {
-            width: 24px;
-            height: 24px;
-            margin-right: 8px;
-            border-radius: 50%;
-        }
         .token-list {
             display: flex;
             flex-direction: column;
@@ -114,26 +89,12 @@
                 padding: 6px 12px;
                 font-size: 12px;
             }
-            .add-network-button {
-                padding: 8px 16px;
-                font-size: 14px;
-            }
-            .network-logo {
-                width: 20px;
-                height: 20px;
-            }
         }
     </style>
 </head>
 <body>
     <h2>Add Shibarium Token to Wallet</h2>
     <div class="wallet-info" id="walletInfo">Detecting wallet...</div>
-    <div class="add-network-container">
-        <button class="add-network-button" onclick="addShibariumNetworkWithIcon()">
-            <img src="https://woofswap.finance/image/tokens/BONE.png" class="network-logo" alt="BONE logo">
-            Add Shibarium Network with BONE Icon
-        </button>
-    </div>
     <div class="token-list" id="tokenList"></div>
 
     <script>
@@ -249,7 +210,7 @@
                     <div class="token-symbol">${token.symbol}</div>
                     <div class="token-address">${token.address}</div>
                     <div class="token-decimals">${token.decimals}</div>
-                    <button class="add-button" onclick="addShibariumAndToken('${token.address}', '${token.symbol}', ${token.decimals}, '${token.logo}')">
+                    <button class="add-button" onclick="addToken('${token.address}', '${token.symbol}', ${token.decimals}, '${token.logo}')">
                         ${name ? `Add to ${name}` : 'Add to Wallet'}
                     </button>
                 `;
@@ -257,36 +218,8 @@
             });
         }
 
-        // Function to get the current RPC URL (if on Shibarium network)
-        async function getCurrentRpcUrl(provider) {
-            const shibariumRpcUrls = ['https://www.shibrpc.com', 'https://rpc.shibrpc.com'];
-            try {
-                const chainId = await provider.request({ method: 'eth_chainId' });
-                if (chainId === '0x6d') { // If already on Shibarium
-                    for (const rpcUrl of shibariumRpcUrls) {
-                        try {
-                            const response = await fetch(rpcUrl, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_chainId', params: [], id: 1 })
-                            });
-                            const data = await response.json();
-                            if (data.result === '0x6d') {
-                                return rpcUrl;
-                            }
-                        } catch (error) {
-                            console.warn(`RPC ${rpcUrl} is not responding:`, error);
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error detecting current RPC:', error);
-            }
-            return shibariumRpcUrls[0];
-        }
-
-        // Add Shibarium network with BONE icon
-        async function addShibariumNetworkWithIcon() {
+        // Add token to wallet
+        async function addToken(address, symbol, decimals, logo) {
             const { provider } = detectWallet();
             if (!provider) {
                 alert('Please install a compatible wallet (e.g., MetaMask, OKX Wallet, Trust Wallet)!');
@@ -295,88 +228,11 @@
 
             try {
                 const shibariumChainId = '0x6d';
-                const boneIconUrl = 'https://woofswap.finance/image/tokens/BONE.png';
-                const chainId = await provider.request({ method: 'eth_chainId' });
-
-                if (chainId === shibariumChainId) {
-                    alert('You are already on the Shibarium network!\nTo set the BONE icon for the native token, you need to:\n1. Remove the Shibarium network from your wallet (MetaMask: Network dropdown -> Shibarium -> Delete).\n2. Click this button again to re-add the network with the BONE icon.\nAlternatively, you can add WBONE as a token (already in the list below) to display the BONE icon.');
-                    return;
-                }
-
-                const currentRpcUrl = await getCurrentRpcUrl(provider);
-                await provider.request({
-                    method: 'wallet_addEthereumChain',
-                    params: [{
-                        chainId: shibariumChainId,
-                        chainName: 'Shibarium',
-                        nativeCurrency: {
-                            name: 'BONE',
-                            symbol: 'BONE',
-                            decimals: 18,
-                            iconUrls: [boneIconUrl] // Set icon for the native token BONE
-                        },
-                        rpcUrls: [currentRpcUrl],
-                        blockExplorerUrls: ['https://www.shibariumscan.io']
-                    }]
-                });
-
-                await provider.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: shibariumChainId }]
-                });
-
-                alert('Shibarium network added with BONE icon!\nIf the BONE icon does not appear, your wallet may not support the "iconUrls" field. Try adding WBONE as a token (already in the list) or update your wallet to the latest version.');
-            } catch (error) {
-                console.error('Error adding Shibarium network:', error);
-                let errorMessage = 'Failed to add Shibarium network.\n';
-                if (error.code === 4001) {
-                    errorMessage += 'You rejected the request. Please approve the network addition in your wallet.';
-                } else if (error.message && error.message.includes('already exists')) {
-                    errorMessage += 'Shibarium network already exists in your wallet. Please remove it (MetaMask: Network dropdown -> Shibarium -> Delete) and try again.';
-                } else if (error.message && error.message.includes('rpc')) {
-                    errorMessage += 'The RPC URL may be unavailable. Please check your internet connection or try again later.\nYou can also manually add Shibarium (Chain ID: 109, RPC: https://www.shibrpc.com, Symbol: BONE).';
-                } else {
-                    errorMessage += 'Error: ' + (error.message || 'Unknown error') + '\nPlease ensure your wallet allows adding custom networks, or manually add Shibarium (Chain ID: 109, RPC: https://www.shibrpc.com, Symbol: BONE).';
-                }
-                alert(errorMessage);
-            }
-        }
-
-        // Add Shibarium network and token
-        async function addShibariumAndToken(address, symbol, decimals, logo) {
-            const { provider } = detectWallet();
-            if (!provider) {
-                alert('Please install a compatible wallet (e.g., MetaMask, OKX Wallet, Trust Wallet)!');
-                return;
-            }
-
-            try {
-                const shibariumChainId = '0x6d';
-                const boneIconUrl = 'https://woofswap.finance/image/tokens/BONE.png';
                 const chainId = await provider.request({ method: 'eth_chainId' });
 
                 if (chainId !== shibariumChainId) {
-                    const currentRpcUrl = await getCurrentRpcUrl(provider);
-                    await provider.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [{
-                            chainId: shibariumChainId,
-                            chainName: 'Shibarium',
-                            nativeCurrency: {
-                                name: 'BONE',
-                                symbol: 'BONE',
-                                decimals: 18,
-                                iconUrls: [boneIconUrl]
-                            },
-                            rpcUrls: [currentRpcUrl],
-                            blockExplorerUrls: ['https://www.shibariumscan.io']
-                        }]
-                    });
-
-                    await provider.request({
-                        method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: shibariumChainId }]
-                    });
+                    alert('Please switch to the Shibarium network (Chain ID: 109) in your wallet to add this token.\nYou can manually add Shibarium with the following details:\n- RPC URL: https://www.shibrpc.com\n- Chain ID: 109\n- Symbol: BONE\n- Block Explorer: https://www.shibariumscan.io');
+                    return;
                 }
 
                 const wasAdded = await provider.request({
@@ -393,8 +249,8 @@
                     alert('User cancelled adding token.');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to add network or token. Check your wallet, network settings, or RPC availability.');
+                console.error('Error adding token:', error);
+                alert('Failed to add token. Please ensure you are on the Shibarium network and your wallet supports adding tokens.');
             }
         }
 
