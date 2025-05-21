@@ -263,7 +263,6 @@
             try {
                 const chainId = await provider.request({ method: 'eth_chainId' });
                 if (chainId === '0x6d') { // If already on Shibarium
-                    // Use a simple JSON-RPC request to check which RPC is currently active
                     for (const rpcUrl of shibariumRpcUrls) {
                         try {
                             const response = await fetch(rpcUrl, {
@@ -273,7 +272,7 @@
                             });
                             const data = await response.json();
                             if (data.result === '0x6d') {
-                                return rpcUrl; // Return the RPC URL that matches the current network
+                                return rpcUrl;
                             }
                         } catch (error) {
                             console.warn(`RPC ${rpcUrl} is not responding:`, error);
@@ -283,7 +282,6 @@
             } catch (error) {
                 console.error('Error detecting current RPC:', error);
             }
-            // Default to the first RPC if not on Shibarium or detection fails
             return shibariumRpcUrls[0];
         }
 
@@ -301,12 +299,10 @@
                 const chainId = await provider.request({ method: 'eth_chainId' });
 
                 if (chainId === shibariumChainId) {
-                    // Already on Shibarium, inform user about BONE icon limitation
-                    alert('You are already on the Shibarium network!\nUnfortunately, most wallets (like MetaMask) do not allow updating the native token (BONE) icon programmatically.\nTo display the BONE icon, you can:\n1. Add WBONE as a token (already in the list below, with the same icon).\n2. Manually edit the Shibarium network in your wallet to set the BONE icon.\n3. Remove the Shibarium network and re-add it using this button.');
+                    alert('You are already on the Shibarium network!\nTo set the BONE icon, you need to:\n1. Remove the Shibarium network from your wallet (MetaMask: Network dropdown -> Shibarium -> Delete).\n2. Click this button again to re-add the network with the BONE icon.\nAlternatively, you can add WBONE as a token (already in the list below) to display the BONE icon.');
                     return;
                 }
 
-                // If not on Shibarium, add the network
                 const currentRpcUrl = await getCurrentRpcUrl(provider);
                 await provider.request({
                     method: 'wallet_addEthereumChain',
@@ -329,7 +325,7 @@
                     params: [{ chainId: shibariumChainId }]
                 });
 
-                alert('Shibarium network added with BONE icon!\nIf the BONE icon does not appear, try adding WBONE as a token (already in the list) or manually edit the network in your wallet.');
+                alert('Shibarium network added with BONE icon!\nIf the BONE icon does not appear, try adding WBONE as a token (already in the list) or update your wallet to the latest version.');
             } catch (error) {
                 console.error('Error adding Shibarium network:', error);
                 alert('Failed to add Shibarium network. Error: ' + (error.message || 'Unknown error') + '\nPlease ensure your wallet allows adding custom networks, or manually add Shibarium (Chain ID: 109, RPC: https://www.shibrpc.com, Symbol: BONE).');
@@ -350,7 +346,6 @@
                 const chainId = await provider.request({ method: 'eth_chainId' });
 
                 if (chainId !== shibariumChainId) {
-                    // If not on Shibarium, add the network with the current RPC
                     const currentRpcUrl = await getCurrentRpcUrl(provider);
                     await provider.request({
                         method: 'wallet_addEthereumChain',
@@ -374,7 +369,6 @@
                     });
                 }
 
-                // Add token
                 const wasAdded = await provider.request({
                     method: 'wallet_watchAsset',
                     params: {
