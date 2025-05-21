@@ -148,7 +148,7 @@
             { address: "0x506d8d2d9c715Eb34F514cc3EF48C7aBD19e2bc7", symbol: "TREAT", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/treat.png" },
             { address: "0x5d63C604803BbF7919953b73c89309B5CBcc227a", symbol: "CANNED", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/CANNED.png" },
             { address: "0x0cCD687CC6F8461170336D8e8cf46A39313DEab9", symbol: "LUISA", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/luisa.png" },
-            { address: "0xe10EeeE98F64bFc3BB308A724Df7f22717DFa7Cb", symbol: "SHIT", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/Shit.png" },
+            { address: "0xe10EeeE98F64bFc3BB308A724Df7f227 SHOPIFY17DFa7Cb", symbol: "SHIT", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/Shit.png" },
             { address: "0x03ac57bd3e68c839f5141679bde73438ddb758be", symbol: "SHY", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/shy.png" },
             { address: "0x14d267a184c2a7b37848d3e49e2c782f3edc5e6b", symbol: "KAAL", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/kaal.png" },
             { address: "0x2e6f5a65920b6b1b601e31675906ed6317170642", symbol: "LC", decimals: 18, logo: "https://www.woofswap.finance/image/tokens/lc.png" },
@@ -196,22 +196,45 @@
             }
 
             try {
-                await window.ethereum.request({
-                    method: 'wallet_addEthereumChain',
-                    params: [{
-                        chainId: '0x6d',
-                        chainName: 'Shibarium',
-                        nativeCurrency: { name: 'BONE', symbol: 'BONE', decimals: 18 },
-                        rpcUrls: ['https://www.shibrpc.com'],
-                        blockExplorerUrls: ['https://www.shibariumscan.io']
-                    }]
-                });
+                // 检查当前网络是否为Shibarium（链ID: 109）
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                const shibariumChainId = '0x6d';
+                const rpcUrls = ['https://www.shibrpc.com', 'https://rpc.shibrpc.com']; // 支持两个RPC，优先使用第一个
+                let currentRpcIndex = 0;
 
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x6d' }]
-                });
+                if (chainId !== shibariumChainId) {
+                    // 如果当前网络不是Shibarium，则尝试添加网络
+                    let networkAdded = false;
+                    while (currentRpcIndex < rpcUrls.length && !networkAdded) {
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: shibariumChainId,
+                                    chainName: 'Shibarium',
+                                    nativeCurrency: { name: 'BONE', symbol: 'BONE', decimals: 18 },
+                                    rpcUrls: [rpcUrls[currentRpcIndex]],
+                                    blockExplorerUrls: ['https://www.shibariumscan.io']
+                                }]
+                            });
 
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: shibariumChainId }]
+                            });
+
+                            networkAdded = true;
+                        } catch (error) {
+                            console.error(`Failed with RPC ${rpcUrls[currentRpcIndex]}:`, error);
+                            currentRpcIndex++;
+                            if (currentRpcIndex >= rpcUrls.length) {
+                                throw new Error('All RPC URLs failed.');
+                            }
+                        }
+                    }
+                }
+
+                // 添加代币
                 const wasAdded = await window.ethereum.request({
                     method: 'wallet_watchAsset',
                     params: {
@@ -227,7 +250,7 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to add network or token. Check MetaMask or network settings.');
+                alert('Failed to add network or token. Check MetaMask, network settings, or RPC availability.');
             }
         }
 
