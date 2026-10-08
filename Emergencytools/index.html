@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WoofSwap Emergency Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        .lang-toggle {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 16px;
+            gap: 4px;
+        }
+        .lang-btn {
+            width: auto;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 6px;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .lang-btn.active {
+            background: rgba(254,202,87,0.15);
+            border-color: rgba(254,202,87,0.4);
+            color: #feca57;
+        }
+        .lang-btn:hover { border-color: rgba(255,255,255,0.3); }
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 24px;
+            background: linear-gradient(90deg, #ff6b6b, #feca57);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #feca57;
+        }
+        label {
+            display: block;
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 6px;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        input:focus, select:focus { outline: none; border-color: #feca57; }
+        input::placeholder { color: #555; }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255,107,107,0.3);
+        }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-secondary { background: linear-gradient(135deg, #4834d4, #685de7); }
+        .btn-success { background: linear-gradient(135deg, #00b894, #00a381); }
+        .info-box {
+            background: rgba(254,202,87,0.1);
+            border: 1px solid rgba(254,202,87,0.3);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: #888; }
+        .info-value {
+            color: #fff;
+            font-family: monospace;
+            word-break: break-all;
+            text-align: right;
+            max-width: 60%;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 13px;
+            word-break: break-all;
+        }
+        .status.info { background: rgba(52,152,219,0.2); border: 1px solid rgba(52,152,219,0.3); }
+        .status.success { background: rgba(39,174,96,0.2); border: 1px solid rgba(39,174,96,0.3); }
+        .status.error { background: rgba(231,76,60,0.2); border: 1px solid rgba(231,76,60,0.3); }
+        .status.pending { background: rgba(241,196,15,0.2); border: 1px solid rgba(241,196,15,0.3); }
+        .hidden { display: none; }
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .btn-group button { font-size: 13px; padding: 12px; }
+        .warning {
+            background: rgba(231,76,60,0.1);
+            border: 1px solid rgba(231,76,60,0.3);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lang-toggle">
+            <button class="lang-btn active" id="btnEn" onclick="setLang('en')">EN</button>
+            <button class="lang-btn" id="btnZh" onclick="setLang('zh')">中文</button>
+        </div>
+
+        <h1 id="tTitle"></h1>
+        <p class="subtitle" id="tSubtitle"></p>
+
+        <!-- Connect Wallet -->
+        <div class="card">
+            <div class="card-title" id="tStep1"></div>
+            <button id="connectBtn" onclick="connectWallet()"></button>
+            <div id="walletInfo" class="info-box hidden" style="margin-top:16px;">
+                <div class="info-row">
+                    <span class="info-label" id="tWalletAddr"></span>
+                    <span class="info-value" id="walletAddress">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" id="tBoneBal"></span>
+                    <span class="info-value" id="boneBalance">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Query Pair -->
+        <div class="card">
+            <div class="card-title" id="tStep2"></div>
+            <div class="warning" id="tWarning"></div>
+            <label id="tPairLabel"></label>
+            <input type="text" id="pairAddress" placeholder="0x..." oninput="validateAddress(this)">
+            <button onclick="queryPair()" id="tQueryBtn"></button>
+            <div id="pairInfo" class="info-box hidden" style="margin-top:16px;">
+                <div class="info-row">
+                    <span class="info-label">Token0</span>
+                    <span class="info-value" id="token0">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Token1</span>
+                    <span class="info-value" id="token1">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" id="tStableLabel"></span>
+                    <span class="info-value" id="isStable">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" id="tGaugeLabel"></span>
+                    <span class="info-value" id="gaugeAddress">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Position -->
+        <div class="card hidden" id="positionCard">
+            <div class="card-title" id="tStep3"></div>
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="info-label" id="tLpBalLabel"></span>
+                    <span class="info-value" id="lpBalance">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" id="tGaugeBalLabel"></span>
+                    <span class="info-value" id="gaugeBalance">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" id="tRewardLabel"></span>
+                    <span class="info-value" id="pendingRewards">-</span>
+                </div>
+            </div>
+            <div class="btn-group" id="gaugeActions">
+                <button class="btn-secondary" onclick="unstake()" id="tUnstakeBtn"></button>
+                <button class="btn-success" onclick="claimRewards()" id="tClaimBtn"></button>
+            </div>
+            <button style="margin-top:10px;" onclick="removeLiquidity()" id="tRemoveBtn"></button>
+            <div id="actionStatus"></div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="card">
+            <div class="card-title" id="tInstrTitle"></div>
+            <div id="tInstrBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // ── i18n ──
+        let lang = 'en';
+        const I18N = {
+            en: {
+                title: 'WoofSwap Emergency Tool',
+                subtitle: 'Shibarium Network \u2014 Unstake / Remove Liquidity',
+                step1: '1. Connect Wallet',
+                connect: 'Connect MetaMask',
+                connected: 'Connected',
+                walletAddr: 'Wallet Address',
+                boneBal: 'BONE Balance',
+                step2: '2. Enter Pair Address',
+                warning: '\u26a0\ufe0f Enter the LP Pair contract address, NOT a token address. You can find it on the woofswap.finance liquidity page.',
+                pairLabel: 'Pair Contract Address',
+                queryBtn: 'Query Pair Info',
+                stableLabel: 'Stable Pool',
+                gaugeLabel: 'Gauge Address',
+                stableYes: 'Yes (Stable)',
+                stableNo: 'No (Volatile)',
+                none: 'None',
+                step3: '3. Your Position',
+                lpBalLabel: 'LP Balance (unstaked)',
+                gaugeBalLabel: 'Gauge Staked',
+                rewardLabel: 'Pending Rewards',
+                unstakeBtn: 'Unstake',
+                claimBtn: 'Claim Rewards',
+                removeBtn: 'Remove Liquidity (All)',
+                instrTitle: 'Instructions',
+                instrBody: '<ol style="padding-left:20px;font-size:13px;color:#aaa;line-height:1.8;">'
+                    + '<li>Connect your MetaMask wallet and switch to the <b>Shibarium</b> network</li>'
+                    + '<li>Enter your LP Pair contract address</li>'
+                    + '<li>Click "Query Pair Info" to load pool details</li>'
+                    + '<li>Check your position: LP balance, staked amount, pending rewards</li>'
+                    + '<li>Perform the action you need:'
+                    + '<ul style="margin-top:8px;">'
+                    + '<li><b>Unstake</b>: Withdraw LP tokens from the Gauge back to your wallet</li>'
+                    + '<li><b>Claim Rewards</b>: Collect earned WOOF rewards</li>'
+                    + '<li><b>Remove Liquidity</b>: Swap LP tokens back to the underlying tokens (unstake first)</li>'
+                    + '</ul></li></ol>',
+                // status messages
+                installMM: 'Please install MetaMask',
+                connectFail: 'Connection failed: ',
+                walletOk: 'Wallet connected',
+                connectFirst: 'Please connect your wallet first',
+                invalidAddr: 'Please enter a valid address',
+                querying: 'Querying pair info...',
+                queryOk: 'Query successful',
+                queryFail: 'Query failed: ',
+                noStaked: 'No staked LP to unstake',
+                unstaking: 'Unstaking...',
+                txSubmitted: 'Transaction submitted: ',
+                unstakeOk: 'Unstaked successfully!',
+                unstakeFail: 'Unstake failed: ',
+                claiming: 'Claiming rewards...',
+                claimOk: 'Rewards claimed successfully!',
+                claimFail: 'Claim failed: ',
+                noLp: 'No LP tokens to remove',
+                unstakeFirst: 'Please unstake first before removing liquidity',
+                removing: 'Removing liquidity...',
+                approving: 'Approving LP tokens...',
+                removeOk: 'Liquidity removed successfully!',
+                removeFail: 'Remove failed: ',
+                noGauge: 'This pair has no Gauge (no staking)',
+            },
+            zh: {
+                title: 'WoofSwap \u7d27\u6025\u5de5\u5177',
+                subtitle: 'Shibarium \u7f51\u7edc \u2014 \u64a4\u9500\u8d28\u62bc / \u79fb\u9664\u6d41\u52a8\u6027',
+                step1: '1. \u8fde\u63a5\u94b1\u5305',
+                connect: '\u8fde\u63a5 MetaMask',
+                connected: '\u5df2\u8fde\u63a5',
+                walletAddr: '\u94b1\u5305\u5730\u5740',
+                boneBal: 'BONE \u4f59\u989d',
+                step2: '2. \u8f93\u5165\u914d\u5bf9\u5730\u5740',
+                warning: '\u26a0\ufe0f \u8bf7\u8f93\u5165 LP \u914d\u5bf9\u5408\u7ea6\u5730\u5740\uff08Pair Address\uff09\uff0c\u4e0d\u662f\u4ee3\u5e01\u5730\u5740\u3002\u914d\u5bf9\u5730\u5740\u53ef\u4ee5\u5728 woofswap.finance \u7684\u6d41\u52a8\u6027\u9875\u9762\u627e\u5230\u3002',
+                pairLabel: '\u914d\u5bf9\u5408\u7ea6\u5730\u5740 (Pair Address)',
+                queryBtn: '\u67e5\u8be2\u914d\u5bf9\u4fe1\u606f',
+                stableLabel: '\u7a33\u5b9a\u6c60',
+                gaugeLabel: 'Gauge \u5730\u5740',
+                stableYes: '\u662f (Stable)',
+                stableNo: '\u5426 (Volatile)',
+                none: '\u65e0',
+                step3: '3. \u4f60\u7684\u6301\u4ed3',
+                lpBalLabel: 'LP \u4f59\u989d\uff08\u672a\u8d28\u62bc\uff09',
+                gaugeBalLabel: 'Gauge \u8d28\u62bc\u6570\u91cf',
+                rewardLabel: '\u5f85\u9886\u53d6\u5956\u52b1',
+                unstakeBtn: '\u64a4\u9500\u8d28\u62bc',
+                claimBtn: '\u9886\u53d6\u5956\u52b1',
+                removeBtn: '\u79fb\u9664\u6d41\u52a8\u6027\uff08\u5168\u90e8\uff09',
+                instrTitle: '\u4f7f\u7528\u8bf4\u660e',
+                instrBody: '<ol style="padding-left:20px;font-size:13px;color:#aaa;line-height:1.8;">'
+                    + '<li>\u8fde\u63a5\u4f60\u7684 MetaMask \u94b1\u5305\uff0c\u786e\u4fdd\u7f51\u7edc\u5207\u6362\u5230 <b>Shibarium</b></li>'
+                    + '<li>\u8f93\u5165\u4f60\u7684 LP \u914d\u5bf9\u5408\u7ea6\u5730\u5740</li>'
+                    + '<li>\u70b9\u51fb\u201c\u67e5\u8be2\u914d\u5bf9\u4fe1\u606f\u201d\u83b7\u53d6\u6c60\u5b50\u8be6\u60c5</li>'
+                    + '<li>\u67e5\u770b\u4f60\u7684\u6301\u4ed3\uff1aLP\u4f59\u989d\u3001\u8d28\u62bc\u6570\u91cf\u3001\u5f85\u9886\u5956\u52b1</li>'
+                    + '<li>\u6839\u636e\u9700\u8981\u6267\u884c\u64cd\u4f5c\uff1a'
+                    + '<ul style="margin-top:8px;">'
+                    + '<li><b>\u64a4\u9500\u8d28\u62bc</b>\uff1a\u5c06 Gauge \u4e2d\u7684 LP \u53d6\u56de\u5230\u94b1\u5305</li>'
+                    + '<li><b>\u9886\u53d6\u5956\u52b1</b>\uff1a\u9886\u53d6\u8d28\u62bc\u4ea7\u751f\u7684 WOOF \u5956\u52b1</li>'
+                    + '<li><b>\u79fb\u9664\u6d41\u52a8\u6027</b>\uff1a\u5c06 LP \u4ee3\u5e01\u6362\u56de\u539f\u59cb\u4ee3\u5e01\uff08\u9700\u5148\u64a4\u9500\u8d28\u62bc\uff09</li>'
+                    + '</ul></li></ol>',
+                installMM: '\u8bf7\u5b89\u88c5 MetaMask \u94b1\u5305',
+                connectFail: '\u8fde\u63a5\u5931\u8d25: ',
+                walletOk: '\u94b1\u5305\u5df2\u8fde\u63a5',
+                connectFirst: '\u8bf7\u5148\u8fde\u63a5\u94b1\u5305',
+                invalidAddr: '\u8bf7\u8f93\u5165\u6709\u6548\u7684\u5730\u5740',
+                querying: '\u6b63\u5728\u67e5\u8be2\u914d\u5bf9\u4fe1\u606f...',
+                queryOk: '\u67e5\u8be2\u6210\u529f',
+                queryFail: '\u67e5\u8be2\u5931\u8d25: ',
+                noStaked: '\u6ca1\u6709\u8d28\u62bc\u7684 LP \u53ef\u4ee5\u64a4\u9500',
+                unstaking: '\u6b63\u5728\u64a4\u9500\u8d28\u62bc...',
+                txSubmitted: '\u4ea4\u6613\u5df2\u63d0\u4ea4: ',
+                unstakeOk: '\u64a4\u9500\u8d28\u62bc\u6210\u529f\uff01',
+                unstakeFail: '\u64a4\u9500\u5931\u8d25: ',
+                claiming: '\u6b63\u5728\u9886\u53d6\u5956\u52b1...',
+                claimOk: '\u9886\u53d6\u5956\u52b1\u6210\u529f\uff01',
+                claimFail: '\u9886\u53d6\u5931\u8d25: ',
+                noLp: '\u6ca1\u6709 LP \u53ef\u4ee5\u79fb\u9664',
+                unstakeFirst: '\u8bf7\u5148\u64a4\u9500\u8d28\u62bc\u518d\u79fb\u9664\u6d41\u52a8\u6027',
+                removing: '\u6b63\u5728\u79fb\u9664\u6d41\u52a8\u6027...',
+                approving: '\u6b63\u5728\u6388\u6743 LP \u4ee3\u5e01...',
+                removeOk: '\u79fb\u9664\u6d41\u52a8\u6027\u6210\u529f\uff01',
+                removeFail: '\u79fb\u9664\u5931\u8d25: ',
+                noGauge: '\u8be5\u914d\u5bf9\u6ca1\u6709 Gauge\uff08\u65e0\u8d28\u62bc\uff09',
+            }
+        };
+
+        function t(key) { return I18N[lang][key] || key; }
+
+        function setLang(l) {
+            lang = l;
+            document.getElementById('btnEn').classList.toggle('active', l === 'en');
+            document.getElementById('btnZh').classList.toggle('active', l === 'zh');
+            document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+            applyI18n();
+            // re-render dynamic content if pair was already queried
+            if (currentPair) refreshPairUI();
+        }
+
+        function applyI18n() {
+            document.getElementById('tTitle').textContent = t('title');
+            document.getElementById('tSubtitle').textContent = t('subtitle');
+            document.getElementById('tStep1').textContent = t('step1');
+            document.getElementById('connectBtn').textContent =
+                document.getElementById('connectBtn').disabled ? t('connected') : t('connect');
+            document.getElementById('tWalletAddr').textContent = t('walletAddr');
+            document.getElementById('tBoneBal').textContent = t('boneBal');
+            document.getElementById('tStep2').textContent = t('step2');
+            document.getElementById('tWarning').textContent = t('warning');
+            document.getElementById('tPairLabel').textContent = t('pairLabel');
+            document.getElementById('tQueryBtn').textContent = t('queryBtn');
+            document.getElementById('tStableLabel').textContent = t('stableLabel');
+            document.getElementById('tGaugeLabel').textContent = t('gaugeLabel');
+            document.getElementById('tStep3').textContent = t('step3');
+            document.getElementById('tLpBalLabel').textContent = t('lpBalLabel');
+            document.getElementById('tGaugeBalLabel').textContent = t('gaugeBalLabel');
+            document.getElementById('tRewardLabel').textContent = t('rewardLabel');
+            document.getElementById('tUnstakeBtn').textContent = t('unstakeBtn');
+            document.getElementById('tClaimBtn').textContent = t('claimBtn');
+            document.getElementById('tRemoveBtn').textContent = t('removeBtn');
+            document.getElementById('tInstrTitle').textContent = t('instrTitle');
+            document.getElementById('tInstrBody').innerHTML = t('instrBody');
+        }
+
+        // ── Shibarium config ──
+        const CONFIG = {
+            chainId: 109,
+            chainIdHex: '0x6d',
+            rpcUrl: 'https://www.shibrpc.com',
+            explorer: 'https://www.shibariumscan.io',
+            router: '0x96b16aBD53Bfd765F4CD118590C1d0be8B57DE24',
+            factory: '0xB9fbdFA27B7ba8BB2d4bB4aB399e4c55F0F7F83a',
+            voter: '0x30d9159c8c9e403A0e9597837052F70cf8eC362c',
+            wbone: '0x839FdB6cc98342B428E074C1573ADF6D48CA3bFd',
+            woof: '0xD0daa7B6ff1B40d3cc6F0B2Cf7E85cB993D1c834',
+        };
+
+        const ABI = {
+            pair: [
+                'function token0() view returns (address)',
+                'function token1() view returns (address)',
+                'function stable() view returns (bool)',
+                'function balanceOf(address) view returns (uint256)',
+                'function decimals() view returns (uint8)',
+                'function approve(address,uint256) returns (bool)',
+                'function allowance(address,address) view returns (uint256)'
+            ],
+            voter: [
+                'function gauges(address pair) view returns (address)'
+            ],
+            gauge: [
+                'function balanceOf(address) view returns (uint256)',
+                'function deposit(uint256 amount, uint256 tokenId) external',
+                'function withdraw(uint256 amount) external',
+                'function getReward(address account, address[] tokens) external',
+                'function earned(address token, address account) view returns (uint256)'
+            ],
+            erc20: [
+                'function name() view returns (string)',
+                'function symbol() view returns (string)',
+                'function decimals() view returns (uint8)',
+                'function balanceOf(address) view returns (uint256)'
+            ],
+            router: [
+                'function removeLiquidity(address tokenA, address tokenB, bool stable, uint256 liquidity, uint256 amountAMin, uint256 amountBMin, address to, uint256 deadline) returns (uint256 amountA, uint256 amountB)',
+                'function removeLiquidityETH(address token, bool stable, uint256 liquidity, uint256 amountTokenMin, uint256 amountETHMin, address to, uint256 deadline) returns (uint256 amountToken, uint256 amountETH)'
+            ]
+        };
+
+        // ── State ──
+        let provider = null;
+        let signer = null;
+        let account = null;
+        let currentPair = null;
+        let pairContract = null;
+        let gaugeContract = null;
+
+        // ── Connect Wallet ──
+        async function connectWallet() {
+            if (!window.ethereum) { showStatus('error', t('installMM')); return; }
+            try {
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                if (chainId !== CONFIG.chainIdHex) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: CONFIG.chainIdHex }]
+                        });
+                    } catch (e) {
+                        if (e.code === 4902) {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: CONFIG.chainIdHex,
+                                    chainName: 'Shibarium',
+                                    nativeCurrency: { name: 'BONE', symbol: 'BONE', decimals: 18 },
+                                    rpcUrls: [CONFIG.rpcUrl],
+                                    blockExplorerUrls: [CONFIG.explorer]
+                                }]
+                            });
+                        } else throw e;
+                    }
+                }
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send('eth_requestAccounts', []);
+                signer = provider.getSigner();
+                account = await signer.getAddress();
+
+                document.getElementById('walletAddress').textContent = shortenAddress(account);
+                const balance = await provider.getBalance(account);
+                document.getElementById('boneBalance').textContent = ethers.utils.formatEther(balance) + ' BONE';
+                document.getElementById('walletInfo').classList.remove('hidden');
+                document.getElementById('connectBtn').textContent = t('connected');
+                document.getElementById('connectBtn').disabled = true;
+                showStatus('success', t('walletOk'));
+            } catch (error) {
+                showStatus('error', t('connectFail') + error.message);
+            }
+        }
+
+        // ── Query Pair ──
+        async function queryPair() {
+            if (!provider) { showStatus('error', t('connectFirst')); return; }
+            const pairAddr = document.getElementById('pairAddress').value.trim();
+            if (!ethers.utils.isAddress(pairAddr)) { showStatus('error', t('invalidAddr')); return; }
+            try {
+                showStatus('info', t('querying'));
+                pairContract = new ethers.Contract(pairAddr, ABI.pair, provider);
+                const voterContract = new ethers.Contract(CONFIG.voter, ABI.voter, provider);
+                const [token0Addr, token1Addr, stable, gaugeAddr] = await Promise.all([
+                    pairContract.token0(),
+                    pairContract.token1(),
+                    pairContract.stable(),
+                    voterContract.gauges(pairAddr)
+                ]);
+                const token0Contract = new ethers.Contract(token0Addr, ABI.erc20, provider);
+                const token1Contract = new ethers.Contract(token1Addr, ABI.erc20, provider);
+                const [symbol0, symbol1] = await Promise.all([
+                    token0Contract.symbol(),
+                    token1Contract.symbol()
+                ]);
+                currentPair = {
+                    address: pairAddr, token0: token0Addr, token1: token1Addr,
+                    symbol0, symbol1, stable, gauge: gaugeAddr
+                };
+                if (gaugeAddr !== ethers.constants.AddressZero) {
+                    gaugeContract = new ethers.Contract(gaugeAddr, ABI.gauge, signer);
+                } else {
+                    gaugeContract = null;
+                }
+                refreshPairUI();
+                await queryUserPosition();
+                showStatus('success', t('queryOk'));
+            } catch (error) {
+                showStatus('error', t('queryFail') + error.message);
+            }
+        }
+
+        function refreshPairUI() {
+            if (!currentPair) return;
+            document.getElementById('token0').textContent =
+                `${currentPair.symbol0} (${shortenAddress(currentPair.token0)})`;
+            document.getElementById('token1').textContent =
+                `${currentPair.symbol1} (${shortenAddress(currentPair.token1)})`;
+            document.getElementById('isStable').textContent =
+                currentPair.stable ? t('stableYes') : t('stableNo');
+            document.getElementById('gaugeAddress').textContent =
+                currentPair.gauge === ethers.constants.AddressZero ? t('none') : shortenAddress(currentPair.gauge);
+            document.getElementById('pairInfo').classList.remove('hidden');
+        }
+
+        // ── User Position ──
+        async function queryUserPosition() {
+            if (!currentPair || !account) return;
+            try {
+                const [lpBalance, gaugeBalance, earned] = await Promise.all([
+                    pairContract.balanceOf(account),
+                    currentPair.gauge !== ethers.constants.AddressZero && gaugeContract
+                        ? gaugeContract.balanceOf(account)
+                        : Promise.resolve(ethers.constants.Zero),
+                    currentPair.gauge !== ethers.constants.AddressZero && gaugeContract
+                        ? gaugeContract.earned(CONFIG.woof, account)
+                        : Promise.resolve(ethers.constants.Zero)
+                ]);
+                const decimals = await pairContract.decimals();
+                document.getElementById('lpBalance').textContent =
+                    parseFloat(ethers.utils.formatUnits(lpBalance, decimals)).toFixed(6);
+                document.getElementById('gaugeBalance').textContent =
+                    parseFloat(ethers.utils.formatUnits(gaugeBalance, decimals)).toFixed(6);
+                document.getElementById('pendingRewards').textContent =
+                    parseFloat(ethers.utils.formatUnits(earned, 18)).toFixed(4) + ' WOOF';
+                document.getElementById('positionCard').classList.remove('hidden');
+                // Show/hide gauge actions based on whether gauge exists
+                const gaugeActions = document.getElementById('gaugeActions');
+                if (gaugeContract) {
+                    gaugeActions.style.display = 'grid';
+                } else {
+                    gaugeActions.style.display = 'none';
+                }
+                currentPair.lpBalance = lpBalance;
+                currentPair.gaugeBalance = gaugeBalance;
+                currentPair.decimals = decimals;
+            } catch (error) {
+                console.error('queryUserPosition error:', error);
+            }
+        }
+
+        // ── Unstake ──
+        async function unstake() {
+            if (!currentPair) { showStatus('error', t('connectFirst')); return; }
+            if (!gaugeContract) { showStatus('error', t('noGauge')); return; }
+            if (currentPair.gaugeBalance.isZero()) { showStatus('error', t('noStaked')); return; }
+            try {
+                showActionStatus('pending', t('unstaking'));
+                const tx = await gaugeContract.withdraw(currentPair.gaugeBalance);
+                showActionStatus('pending', t('txSubmitted') + shortenAddress(tx.hash));
+                await tx.wait();
+                showActionStatus('success', t('unstakeOk'));
+                await queryUserPosition();
+            } catch (error) {
+                showActionStatus('error', t('unstakeFail') + (error.reason || error.message));
+            }
+        }
+
+        // ── Claim Rewards ──
+        async function claimRewards() {
+            if (!currentPair) { showStatus('error', t('connectFirst')); return; }
+            if (!gaugeContract) { showStatus('error', t('noGauge')); return; }
+            try {
+                showActionStatus('pending', t('claiming'));
+                const tx = await gaugeContract.getReward(account, [CONFIG.woof]);
+                showActionStatus('pending', t('txSubmitted') + shortenAddress(tx.hash));
+                await tx.wait();
+                showActionStatus('success', t('claimOk'));
+                await queryUserPosition();
+            } catch (error) {
+                showActionStatus('error', t('claimFail') + (error.reason || error.message));
+            }
+        }
+
+        // ── Remove Liquidity ──
+        async function removeLiquidity() {
+            if (!currentPair || !pairContract) { showStatus('error', t('connectFirst')); return; }
+            const totalLp = currentPair.lpBalance.add(currentPair.gaugeBalance);
+            if (totalLp.isZero()) { showStatus('error', t('noLp')); return; }
+            if (!currentPair.gaugeBalance.isZero()) { showStatus('error', t('unstakeFirst')); return; }
+            try {
+                showActionStatus('pending', t('removing'));
+                const routerContract = new ethers.Contract(CONFIG.router, ABI.router, signer);
+                const deadline = Math.floor(Date.now() / 1000) + 1200;
+                const allowance = await pairContract.allowance(account, CONFIG.router);
+                if (allowance.lt(currentPair.lpBalance)) {
+                    showActionStatus('pending', t('approving'));
+                    const approveTx = await pairContract.approve(CONFIG.router, ethers.constants.MaxUint256);
+                    await approveTx.wait();
+                }
+                const isWethPair = currentPair.token0.toLowerCase() === CONFIG.wbone.toLowerCase() ||
+                                   currentPair.token1.toLowerCase() === CONFIG.wbone.toLowerCase();
+                let tx;
+                if (isWethPair) {
+                    const otherToken = currentPair.token0.toLowerCase() === CONFIG.wbone.toLowerCase()
+                        ? currentPair.token1 : currentPair.token0;
+                    tx = await routerContract.removeLiquidityETH(
+                        otherToken, currentPair.stable, currentPair.lpBalance,
+                        0, 0, account, deadline
+                    );
+                } else {
+                    tx = await routerContract.removeLiquidity(
+                        currentPair.token0, currentPair.token1, currentPair.stable,
+                        currentPair.lpBalance, 0, 0, account, deadline
+                    );
+                }
+                showActionStatus('pending', t('txSubmitted') + shortenAddress(tx.hash));
+                await tx.wait();
+                showActionStatus('success', t('removeOk'));
+                await queryUserPosition();
+            } catch (error) {
+                showActionStatus('error', t('removeFail') + (error.reason || error.message));
+            }
+        }
+
+        // ── Helpers ──
+        function shortenAddress(addr) {
+            return addr.slice(0, 6) + '...' + addr.slice(-4);
+        }
+        function validateAddress(input) {
+            const v = input.value.trim();
+            input.style.borderColor = (v && !ethers.utils.isAddress(v)) ? '#e74c3c' : 'rgba(255,255,255,0.1)';
+        }
+        function showStatus(type, message) {
+            const d = document.createElement('div');
+            d.className = `status ${type}`;
+            d.textContent = message;
+            document.querySelector('.container').appendChild(d);
+            setTimeout(() => d.remove(), 5000);
+        }
+        function showActionStatus(type, message) {
+            document.getElementById('actionStatus').innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        // ── Init ──
+        applyI18n();
+
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', () => window.location.reload());
+            window.ethereum.on('chainChanged', () => window.location.reload());
+        }
+    </script>
+</body>
+</html>
