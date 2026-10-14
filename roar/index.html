@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fee Claim Console</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f7fa;color:#1a1a2e;min-height:100vh}
+#app{max-width:720px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #e0e0e0;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+header h1{font-size:20px;color:#1a1a2e;font-weight:700}
+.header-right{display:flex;align-items:center;gap:8px}
+#langBtn{padding:6px 14px;border:1px solid #d0d0d0;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;color:#555;transition:all .2s}
+#langBtn:hover{background:#f0f0f0}
+#connectBtn{padding:8px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff8a00,#ff6600);color:#fff;font-weight:600;cursor:pointer;font-size:14px;transition:all .2s}
+#connectBtn:hover{opacity:.9;transform:translateY(-1px)}
+#accountInfo{font-size:12px;color:#666;font-family:monospace}
+.tab-bar{display:flex;gap:4px;margin-bottom:16px;background:#e8ecf1;border-radius:12px;padding:4px}
+.tab{flex:1;padding:10px 16px;border:none;border-radius:10px;background:transparent;cursor:pointer;font-size:14px;font-weight:500;color:#666;transition:all .2s}
+.tab.active{background:#fff;color:#1a1a2e;box-shadow:0 1px 4px rgba(0,0,0,.1);font-weight:600}
+.tab:hover:not(.active){background:rgba(255,255,255,.5)}
+.panel{display:none}
+.panel.active{display:block}
+.card{background:#fff;border-radius:14px;padding:20px;margin-bottom:14px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.card h2{font-size:16px;margin-bottom:12px;color:#1a1a2e;display:flex;align-items:center;gap:8px}
+.card h2 .badge{font-size:11px;padding:2px 8px;border-radius:6px;font-weight:500}
+.badge-info{background:#e8f4fd;color:#1976d2}
+.badge-warn{background:#fff3e0;color:#e65100}
+.badge-success{background:#e8f5e9;color:#2e7d32}
+.kv-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:14px}
+.kv-row:last-child{border-bottom:none}
+.kv-row .label{color:#888;font-size:13px}
+.kv-row .value{font-weight:600;color:#1a1a2e;font-family:monospace;font-size:13px;word-break:break-all;text-align:right;max-width:60%}
+.kv-row .value a{color:#1976d2;text-decoration:none}
+.kv-row .value a:hover{text-decoration:underline}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;width:100%;margin-top:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,#ff8a00,#ff6600);color:#fff}
+.btn-primary:hover:not(:disabled){opacity:.9;transform:translateY(-1px)}
+.btn-secondary{background:#e8ecf1;color:#555}
+.btn-secondary:hover:not(:disabled){background:#dde1e6}
+.btn-success{background:linear-gradient(135deg,#43a047,#2e7d32);color:#fff}
+.btn-success:hover:not(:disabled){opacity:.9}
+.btn-danger{background:linear-gradient(135deg,#e53935,#c62828);color:#fff}
+.btn-danger:hover:not(:disabled){opacity:.9}
+.btn-group{display:flex;gap:8px;margin-top:8px}
+.btn-group .btn{flex:1}
+.toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:10px;color:#fff;font-size:14px;font-weight:500;opacity:0;transition:opacity .3s;z-index:999;max-width:360px;word-break:break-word}
+.toast.show{opacity:1}
+.toast.success{background:#2e7d32}
+.toast.error{background:#c62828}
+.toast.info{background:#1565c0}
+.status-bar{padding:8px 14px;border-radius:8px;font-size:13px;margin-top:8px;display:none;background:#fff3e0;color:#e65100}
+.status-bar.show{display:block}
+.token-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.token-icon{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#ff8a00,#ff6600);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px}
+.token-meta h3{font-size:18px;font-weight:700}
+.token-meta p{font-size:13px;color:#888}
+.section-divider{height:1px;background:#e0e0e0;margin:16px 0}
+.highlight{background:#fffde7;border:1px solid #fff9c4;border-radius:10px;padding:14px;margin-bottom:12px}
+.highlight .kv-row .value{color:#e65100}
+.empty-state{text-align:center;padding:30px;color:#999;font-size:14px}
+.chain-badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;margin-left:8px}
+.chain-rh{background:#fce4ec;color:#c62828}
+.chain-eth{background:#e3f2fd;color:#1565c0}
+.fee-input{width:100%;padding:10px;border:1px solid #d0d0d0;border-radius:8px;font-size:14px;font-family:monospace;margin-top:6px}
+.fee-input:focus{outline:none;border-color:#ff8a00}
+.hint{font-size:12px;color:#888;margin-top:6px;line-height:1.5}
+.warning{background:#fff3e0;border:1px solid #ffe0b2;border-radius:8px;padding:10px;margin-top:8px;font-size:13px;color:#e65100}
+@media(max-width:480px){
+  #app{padding:10px}
+  header h1{font-size:16px}
+  .card{padding:14px}
+  .btn{padding:8px 14px;font-size:13px}
+  .btn-group{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="header">
+    <div class="header-left"><h1 id="title">Fee Claim Console</h1></div>
+    <div class="header-right">
+      <button id="langBtn" onclick="toggleLang()">中文</button>
+      <button id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
+      <span id="accountInfo"></span>
+    </div>
+  </header>
+  <div class="tab-bar">
+    <button class="tab active" id="tabRh" onclick="switchTab('rh')">Robinhood Chain</button>
+    <button class="tab" id="tabEth" onclick="switchTab('eth')">Ethereum</button>
+  </div>
+  <main id="main">
+    <div id="panelRh" class="panel active"></div>
+    <div id="panelEth" class="panel"></div>
+  </main>
+  <div id="toast" class="toast"></div>
+  <div id="status" class="status-bar"></div>
+</div>
+<script>
+// ─────────── i18n ───────────
+let lang = 'en';
+const I18N = {
+  en: {
+    title: 'Fee Claim Console',
+    connect: 'Connect Wallet',
+    disconnect: 'Disconnect',
+    connected: 'Connected',
+    switchNetwork: 'Switch Network',
+    onChain: 'on',
+    token: 'Token',
+    creator: 'Creator',
+    pool: 'Pool',
+    lpTokenId: 'LP Token ID',
+    launchId: 'Launch ID',
+    pendingFees: 'Pending LP Fees',
+    feeToken0: 'Token side',
+    feeToken1: 'Pair side',
+    noFees: 'No pending fees',
+    notFound: 'Token launch not found on-chain',
+    loadingToken: 'Resolving token on-chain...',
+    triggerLpFees: 'Trigger LP Fees',
+    collectFees: 'Collect Trading Fees',
+    burnToken: 'Burn Token',
+    claimFees: 'Claim Fees',
+    noWallet: 'Please connect your wallet first',
+    wrongNetwork: 'Please switch to the correct network',
+    confirmWallet: 'Confirm in wallet...',
+    submitted: 'Submitted',
+    success: 'Success',
+    failed: 'Failed',
+    loading: 'Loading...',
+    creatorFeeControls: 'Creator Fee Controls',
+    tradingFeeClaim: 'Trading Fee Claim',
+    connectedWallet: 'Connected Wallet',
+    notConnected: 'Not connected',
+    access: 'Access',
+    creatorRole: 'Creator',
+    feeRecipient: 'Fee Recipient',
+    viewOnly: 'View Only',
+    feeRecipientWallet: 'Fee Recipient Wallet',
+    saveRecipient: 'Save Recipient',
+    updateRecipient: 'Update Fee Recipient',
+    connectCreator: 'Connect the creator wallet to claim fees.',
+    noPermission: 'This wallet has no claim permission for this token.',
+    anyoneCanTrigger: 'Anyone can trigger this. It sweeps the locked LP\'s accrued fees: the token side is sent to the burn address and the ETH side goes to the platform fee recipient. You only pay gas.',
+    creatorOrRecipient: 'Only the creator or the configured fee recipient can claim trading fees.',
+    youAreRecipient: 'You are the configured fee recipient. You can collect fees but not change the recipient.',
+    setFeeRecipient: 'Choose which wallet receives the trading fees for this token.',
+    invalidAddress: 'Invalid fee recipient wallet',
+    currentRecipient: 'Current Recipient',
+    notSet: 'Not set',
+    platformRecipient: 'Platform Recipient',
+    refreshData: 'Refresh Data',
+    feePanelDesc: 'Creator can set a custom fee recipient wallet. Creator or fee recipient can claim fees.',
+  },
+  zh: {
+    title: '手续费领取控制台',
+    connect: '连接钱包',
+    disconnect: '断开连接',
+    connected: '已连接',
+    switchNetwork: '切换网络',
+    onChain: '链上',
+    token: '代币',
+    creator: '创建者',
+    pool: '池子',
+    lpTokenId: 'LP Token ID',
+    launchId: '发射 ID',
+    pendingFees: '待领取 LP 手续费',
+    feeToken0: '代币侧',
+    feeToken1: '配对侧',
+    noFees: '暂无待领取手续费',
+    notFound: '链上未找到该代币的发射记录',
+    loadingToken: '正在链上解析代币...',
+    triggerLpFees: '触发 LP 手续费',
+    collectFees: '领取交易手续费',
+    burnToken: '烧录代币',
+    claimFees: '领取手续费',
+    noWallet: '请先连接钱包',
+    wrongNetwork: '请切换到正确的网络',
+    confirmWallet: '请在钱包中确认...',
+    submitted: '已提交',
+    success: '成功',
+    failed: '失败',
+    loading: '加载中...',
+    creatorFeeControls: '创建者手续费',
+    tradingFeeClaim: '交易手续费领取',
+    connectedWallet: '当前钱包',
+    notConnected: '未连接',
+    access: '权限',
+    creatorRole: '创建者',
+    feeRecipient: '手续费接收钱包',
+    viewOnly: '仅查看',
+    feeRecipientWallet: '手续费接收钱包',
+    saveRecipient: '保存接收钱包',
+    updateRecipient: '更新手续费接收钱包',
+    connectCreator: '请连接创建者钱包以领取手续费。',
+    noPermission: '当前钱包对该代币没有领取权限。',
+    anyoneCanTrigger: '任何人都可以点。它会领取被锁 LP 累积的手续费：代币那一半会打进销毁地址，ETH 那一半进入平台手续费地址。你只需要支付 gas。',
+    creatorOrRecipient: '只有创建者或已设置的手续费接收钱包可以领取交易手续费。',
+    youAreRecipient: '当前钱包是已设置的手续费接收钱包，可以领取交易手续费。',
+    setFeeRecipient: '你可以设置一个钱包来接收这个代币产生的交易手续费。',
+    invalidAddress: '手续费接收钱包格式不正确',
+    currentRecipient: '当前接收钱包',
+    notSet: '未设置',
+    platformRecipient: '平台接收地址',
+    refreshData: '刷新数据',
+    feePanelDesc: '创建者可以设置自定义手续费接收钱包。创建者或手续费接收钱包可以领取手续费。',
+  }
+};
+function t(key) { return I18N[lang]?.[key] || I18N.en[key] || key; }
+function toggleLang() {
+  lang = lang === 'en' ? 'zh' : 'en';
+  document.getElementById('langBtn').textContent = lang === 'en' ? '中文' : 'EN';
+  document.getElementById('title').textContent = t('title');
+  render();
+}
+
+// ─────────── Config ───────────
+const TOKENS = {
+  rh: {
+    key: 'rh',
+    address: '0x84e8f0f454153c393c81e38b8884e90ebcfa6c0b',
+    chainId: 4663,
+    chainName: 'Robinhood Chain',
+    rpc: 'https://rpc.mainnet.chain.robinhood.com',
+    explorer: 'https://robinhoodchain.blockscout.com',
+    nativeSymbol: 'ETH',
+    wrappedSymbol: 'WETH',
+    // ROAR pairs with ETH on Robinhood Chain (ETH-pair factory)
+    tokenFactory: '0x31321E9fEf6FF05c5c9C823306fC25f29A33eae8',
+    feeDistributor: '0x8b31F9892Cc6f435ba07126A653C88a5AAb9845d',
+    liquidityLocker: '0x3dB0F19B4D921968ad69B812baA05Bd7Df48E1b9',
+    // FeeDistributor: token side → burn (0x...dEaD), ETH side → platform.
+    // No per-creator marketing wallet. collectFees is permissionless.
+    noCreatorFeeSetting: true,
+    publicFeeBurn: true,
+  },
+  eth: {
+    key: 'eth',
+    address: '0x8cddd6eea1067b78b77255e49861843f69d4703d',
+    chainId: 1,
+    chainName: 'Ethereum',
+    rpc: 'https://ethereum-rpc.publicnode.com',
+    explorer: 'https://etherscan.io',
+    nativeSymbol: 'ETH',
+    wrappedSymbol: 'WETH',
+    // Ethereum has two factories (SHIB-pair and ETH-pair). Try both.
+    // SHIB-pair is the default (defaultPairMode: 'shib'), so check it first.
+    factories: [
+      {
+        name: 'SHIB',
+        tokenFactory: '0x23620C3B2CcaEAe576eD1C40B4a670D84998A629',
+        feeDistributor: '0x1fc39045035e37DA1880d2102c380e8DD8E69A89',
+        liquidityLocker: '0x6C5E2c85715894809446be8a22dEa287540ca57E',
+        noCreatorFeeSetting: true,
+      },
+      {
+        name: 'ETH',
+        tokenFactory: '0x4C705B7979B8986506d061BE02ec32659DBeFC2B',
+        feeDistributor: '0x090b79468B615C43f32aD010876B1a12AFe59514',
+        liquidityLocker: '0x81ba0e2706615A3f50a7C4193E187cdE1f601634',
+        noCreatorFeeSetting: true,
+        noCreatorFeeWallet: true,
+        publicFeeBurn: true,
+      }
+    ],
+    // Global flags (apply to both factories)
+    noCreatorFeeSetting: true,
+    publicFeeBurn: true,
+  }
+};
+
+// ─────────── ABI ───────────
+const ABI = {
+  erc20: [
+    'function symbol() view returns (string)',
+    'function name() view returns (string)',
+    'function decimals() view returns (uint8)',
+    'function totalSupply() view returns (uint256)',
+    'function balanceOf(address) view returns (uint256)',
+  ],
+  // Standard token factory (both Robinhood and Ethereum use similar interface)
+  tokenFactory: [
+    'function launchIdByToken(address) view returns (uint256)',
+    'function launchCreator(uint256) view returns (address)',
+    'function launchPool(uint256) view returns (address)',
+    'function launchTokenId(uint256) view returns (uint256)',
+    'function launchTimestamp(uint256) view returns (uint256)',
+    'function launchToken(uint256) view returns (address)',
+  ],
+  liquidityLocker: [
+    'function collectFees(uint256 tokenId) external returns (uint256 amount0,uint256 amount1)',
+    'function pendingTokensOwed(uint256 tokenId) view returns (uint128 tokensOwed0,uint128 tokensOwed1)',
+    'function locks(uint256 tokenId) view returns (address creator,address token0,address token1,uint16 burnBps,bool locked)',
+  ],
+  // FeeDistributor with creator marketing wallet support (Robinhood)
+  feeDistributor: [
+    'function setMarketingWallet(address marketingWallet) external',
+    'function clearMarketingWallet() external',
+    'function creatorMarketingWallet(address) view returns (address)',
+    'function platformRecipient() view returns (address)',
+  ],
+  // FeeDistributor without creator marketing wallet (Ethereum ETH-pair)
+  feeDistributorPlatform: [
+    'function platformRecipient() view returns (address)',
+  ],
+};
+
+// ─────────── State ───────────
+let provider = null;
+let signer = null;
+let account = null;
+let currentChainId = null;
+let activeTab = 'rh';
+let tokenData = { rh: null, eth: null };
+let loading = { rh: false, eth: false };
+
+// ─────────── Helpers ───────────
+function shortAddr(a) { return a ? `${a.slice(0,6)}...${a.slice(-4)}` : ''; }
+function fmtEth(wei) {
+  try { return Number(ethers.utils.formatEther(wei || 0)).toFixed(6); }
+  catch { return '0'; }
+}
+function fmtToken(wei, dec) {
+  try { return Number(ethers.utils.formatUnits(wei || 0, dec || 18)).toLocaleString(undefined, { maximumFractionDigits: 4 }); }
+  catch { return '0'; }
+}
+function explorerTx(hash, cfg) { return `${cfg.explorer}/tx/${hash}`; }
+function explorerAddr(addr, cfg) { return `${cfg.explorer}/address/${addr}`; }
+function explorerToken(addr, cfg) { return `${cfg.explorer}/token/${addr}`; }
+
+function getReadProvider(cfg) {
+  return new ethers.providers.StaticJsonRpcProvider(cfg.rpc, { name: cfg.chainName, chainId: cfg.chainId });
+}
+
+// Normalize all address fields in TOKENS config to proper EIP-55 checksum
+function safeAddr(a) { try { return ethers.utils.getAddress(a.toLowerCase()); } catch { return a; } }
+function normalizeConfig() {
+  for (const cfg of Object.values(TOKENS)) {
+    if (cfg.address) cfg.address = safeAddr(cfg.address);
+    if (cfg.tokenFactory) cfg.tokenFactory = safeAddr(cfg.tokenFactory);
+    if (cfg.feeDistributor) cfg.feeDistributor = safeAddr(cfg.feeDistributor);
+    if (cfg.liquidityLocker) cfg.liquidityLocker = safeAddr(cfg.liquidityLocker);
+    if (cfg.factories) {
+      for (const f of cfg.factories) {
+        if (f.tokenFactory) f.tokenFactory = safeAddr(f.tokenFactory);
+        if (f.feeDistributor) f.feeDistributor = safeAddr(f.feeDistributor);
+        if (f.liquidityLocker) f.liquidityLocker = safeAddr(f.liquidityLocker);
+      }
+    }
+  }
+}
+normalizeConfig();
+
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${type || 'info'}`;
+  setTimeout(() => { el.className = 'toast'; }, 4000);
+}
+
+function setStatus(msg) {
+  const el = document.getElementById('status');
+  if (msg) { el.textContent = msg; el.className = 'status-bar show'; }
+  else { el.className = 'status-bar'; }
+}
+
+// ─────────── Wallet ───────────
+async function connectWallet() {
+  if (account) {
+    account = null; signer = null;
+    document.getElementById('connectBtn').textContent = t('connect');
+    document.getElementById('accountInfo').textContent = '';
+    render();
+    return;
+  }
+  if (!window.ethereum) {
+    showToast('MetaMask not detected', 'error');
+    return;
+  }
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    account = accounts[0];
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    signer = provider.getSigner();
+    const net = await provider.getNetwork();
+    currentChainId = net.chainId;
+    document.getElementById('connectBtn').textContent = t('disconnect');
+    document.getElementById('accountInfo').textContent = `${t('connected')}: ${shortAddr(account)}`;
+    await switchToChain(activeTab);
+    render();
+  } catch (e) {
+    showToast(e?.message || 'Connection failed', 'error');
+  }
+}
+
+async function switchToChain(tabKey) {
+  if (!window.ethereum) return;
+  const cfg = TOKENS[tabKey];
+  const targetChainId = cfg.chainId;
+  if (currentChainId === targetChainId) return;
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: '0x' + targetChainId.toString(16) }],
+    });
+    const net = await provider.getNetwork();
+    currentChainId = net.chainId;
+  } catch (switchError) {
+    if (switchError.code === 4902) {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: '0x' + targetChainId.toString(16),
+            chainName: cfg.chainName,
+            rpcUrls: [cfg.rpc],
+            blockExplorerUrls: [cfg.explorer],
+            nativeCurrency: { name: cfg.nativeSymbol, symbol: cfg.nativeSymbol, decimals: 18 },
+          }],
+        });
+        const net = await provider.getNetwork();
+        currentChainId = net.chainId;
+      } catch (e) {
+        showToast(t('wrongNetwork'), 'error');
+      }
+    } else {
+      showToast(t('wrongNetwork'), 'error');
+    }
+  }
+}
+
+if (typeof window !== 'undefined' && window.ethereum) {
+  window.ethereum.on?.('chainChanged', () => {
+    (async () => {
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      signer = provider.getSigner();
+      const net = await provider.getNetwork();
+      currentChainId = net.chainId;
+      render();
+    })();
+  });
+  window.ethereum.on?.('accountsChanged', (accs) => {
+    account = accs[0] || null;
+    if (!account) {
+      signer = null;
+      document.getElementById('connectBtn').textContent = t('connect');
+      document.getElementById('accountInfo').textContent = '';
+    } else {
+      document.getElementById('accountInfo').textContent = `${t('connected')}: ${shortAddr(account)}`;
+    }
+    render();
+  });
+}
+
+// ─────────── Tab ───────────
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab' + (tab === 'rh' ? 'Rh' : 'Eth')).classList.add('active');
+  document.getElementById('panel' + (tab === 'rh' ? 'Rh' : 'Eth')).classList.add('active');
+  if (!tokenData[tab]) loadTokenData(tab);
+}
+
+// ─────────── Data Loading ───────────
+async function loadTokenData(tabKey) {
+  const cfg = TOKENS[tabKey];
+  loading[tabKey] = true;
+  render();
+  try {
+    const p = getReadProvider(cfg);
+    const tokenAddr = ethers.utils.getAddress(cfg.address);
+
+    const data = { address: tokenAddr };
+
+    // Get basic token info (don't block if this fails)
+    try {
+      const erc20 = new ethers.Contract(tokenAddr, ABI.erc20, p);
+      const [symbol, name, totalSupply] = await Promise.all([
+        erc20.symbol().catch(() => '?'),
+        erc20.name().catch(() => '?'),
+        erc20.totalSupply().catch(() => ethers.BigNumber.from(0)),
+      ]);
+      data.symbol = symbol;
+      data.name = name;
+      data.totalSupply = totalSupply;
+    } catch (e) {
+      console.warn('ERC20 query failed:', e);
+      data.symbol = '?';
+      data.name = 'Unknown';
+      data.totalSupply = ethers.BigNumber.from(0);
+    }
+
+    // For Ethereum, try both factories (SHIB-pair first, then ETH-pair)
+    if (cfg.factories) {
+      for (const f of cfg.factories) {
+        const factory = new ethers.Contract(f.tokenFactory, ABI.tokenFactory, p);
+        const launchId = await factory.launchIdByToken(tokenAddr).catch(() => null);
+        
+        if (launchId && String(launchId) !== '0') {
+          const lid = Number(launchId.toString());
+          const [creator, pool, tokenId, timestamp] = await Promise.all([
+            factory.launchCreator(lid).catch(() => ''),
+            factory.launchPool(lid).catch(() => ''),
+            factory.launchTokenId(lid).catch(() => ''),
+            factory.launchTimestamp(lid).catch(() => 0),
+          ]);
+          data.launchId = lid;
+          data.creator = creator;
+          data.pool = pool;
+          data.tokenId = String(tokenId);
+          data.timestamp = Number(timestamp || 0);
+          data.factoryName = f.name;
+          data.feeDistributor = f.feeDistributor;
+          data.liquidityLocker = f.liquidityLocker;
+          data.noCreatorFeeWallet = f.noCreatorFeeWallet || false;
+          data.publicFeeBurn = f.publicFeeBurn || false;
+          
+          // Load LP pending fees
+          if (data.tokenId && data.tokenId !== '0') {
+            const locker = new ethers.Contract(f.liquidityLocker, ABI.liquidityLocker, p);
+            const lpId = ethers.BigNumber.from(data.tokenId);
+            const [owed0, owed1] = await locker.pendingTokensOwed(lpId).catch(() => [ethers.BigNumber.from(0), ethers.BigNumber.from(0)]);
+            data.pendingOwed0 = ethers.BigNumber.from(owed0);
+            data.pendingOwed1 = ethers.BigNumber.from(owed1);
+            data.hasPendingFees = data.pendingOwed0.gt(0) || data.pendingOwed1.gt(0);
+          }
+          
+          // Load fee distributor data (platform recipient only for Ethereum)
+          if (!f.noCreatorFeeWallet) {
+            try {
+              const fd = new ethers.Contract(f.feeDistributor, ABI.feeDistributorPlatform, p);
+              const pr = await fd.platformRecipient().catch(() => null);
+              if (pr) data.platformRecipient = pr;
+            } catch {}
+          }
+          
+          break; // Found the token, stop searching
+        }
+      }
+    } else {
+      // Robinhood: single factory
+      try {
+        const factory = new ethers.Contract(cfg.tokenFactory, ABI.tokenFactory, p);
+        const launchId = await factory.launchIdByToken(tokenAddr).catch(() => null);
+        
+        if (launchId && String(launchId) !== '0') {
+          const lid = Number(launchId.toString());
+          const [creator, pool, tokenId, timestamp] = await Promise.all([
+            factory.launchCreator(lid).catch(() => ''),
+            factory.launchPool(lid).catch(() => ''),
+            factory.launchTokenId(lid).catch(() => ''),
+            factory.launchTimestamp(lid).catch(() => 0),
+          ]);
+          data.launchId = lid;
+          data.creator = creator;
+          data.pool = pool;
+          data.tokenId = String(tokenId);
+          data.timestamp = Number(timestamp || 0);
+
+          // Load LP pending fees
+          if (data.tokenId && data.tokenId !== '0') {
+            const locker = new ethers.Contract(cfg.liquidityLocker, ABI.liquidityLocker, p);
+            const lpId = ethers.BigNumber.from(data.tokenId);
+            const [owed0, owed1] = await locker.pendingTokensOwed(lpId).catch(() => [ethers.BigNumber.from(0), ethers.BigNumber.from(0)]);
+            data.pendingOwed0 = ethers.BigNumber.from(owed0);
+            data.pendingOwed1 = ethers.BigNumber.from(owed1);
+            data.hasPendingFees = data.pendingOwed0.gt(0) || data.pendingOwed1.gt(0);
+          }
+
+          // Load fee distributor data (platform recipient only)
+          try {
+            const fd = new ethers.Contract(cfg.feeDistributor, ABI.feeDistributorPlatform, p);
+            const pr = await fd.platformRecipient().catch(() => null);
+            if (pr) data.platformRecipient = pr;
+          } catch {}
+        }
+      } catch (e) {
+        console.warn('Factory query failed:', e);
+        // Don't block the whole load, just skip factory data
+      }
+    }
+
+    tokenData[tabKey] = data;
+  } catch (e) {
+    console.error('Load error:', e);
+    tokenData[tabKey] = { error: e?.message || 'Load failed' };
+  } finally {
+    loading[tabKey] = false;
+    render();
+  }
+}
+
+// ─────────── Actions ───────────
+async function doCollectFees(tabKey) {
+  const cfg = TOKENS[tabKey];
+  const data = tokenData[tabKey];
+  if (!account) return showToast(t('noWallet'), 'error');
+  if (!data?.tokenId || data.tokenId === '0') return showToast(t('notFound'), 'error');
+  
+  // Use the correct locker address (data.liquidityLocker for Ethereum dual-factory, cfg.liquidityLocker for Robinhood)
+  const lockerAddr = data.liquidityLocker || cfg.liquidityLocker;
+  
+  try {
+    await switchToChain(tabKey);
+    setStatus(t('confirmWallet'));
+    const s = await (new ethers.providers.Web3Provider(window.ethereum)).getSigner();
+    const locker = new ethers.Contract(lockerAddr, ABI.liquidityLocker, s);
+    const id = ethers.BigNumber.from(data.tokenId);
+    try { await locker.callStatic.collectFees(id); } catch (sim) { throw new Error(sim?.reason || sim?.message || 'Simulation failed'); }
+    const tx = await locker.collectFees(id);
+    setStatus(`${t('submitted')}: ${shortAddr(tx.hash)}`);
+    showToast(`${t('submitted')} ${shortAddr(tx.hash)}`, 'info');
+    await tx.wait();
+    showToast(t('success'), 'success');
+    setStatus('');
+    await loadTokenData(tabKey);
+  } catch (e) {
+    const msg = e?.reason || e?.message || String(e);
+    setStatus(msg);
+    showToast(msg, 'error');
+  }
+}
+
+async function doSetMarketingWallet(tabKey) {
+  const cfg = TOKENS[tabKey];
+  const data = tokenData[tabKey];
+  if (!account) return showToast(t('noWallet'), 'error');
+  const walletAddr = prompt(lang === 'zh' ? '输入手续费接收钱包地址：' : 'Enter fee recipient wallet address:');
+  if (!walletAddr || !ethers.utils.isAddress(walletAddr)) return showToast(t('invalidAddress'), 'error');
+  
+  // Use the correct fee distributor address
+  const fdAddr = data.feeDistributor || cfg.feeDistributor;
+  
+  try {
+    await switchToChain(tabKey);
+    setStatus(t('confirmWallet'));
+    const s = await (new ethers.providers.Web3Provider(window.ethereum)).getSigner();
+    const fd = new ethers.Contract(fdAddr, ABI.feeDistributor, s);
+    const tx = await fd.setMarketingWallet(walletAddr);
+    setStatus(`${t('submitted')}: ${shortAddr(tx.hash)}`);
+    showToast(`${t('submitted')} ${shortAddr(tx.hash)}`, 'info');
+    await tx.wait();
+    showToast(t('success'), 'success');
+    setStatus('');
+    await loadTokenData(tabKey);
+  } catch (e) {
+    const msg = e?.reason || e?.message || String(e);
+    setStatus(msg);
+    showToast(msg, 'error');
+  }
+}
+
+async function doClearMarketingWallet(tabKey) {
+  const cfg = TOKENS[tabKey];
+  const data = tokenData[tabKey];
+  if (!account) return showToast(t('noWallet'), 'error');
+  
+  // Use the correct fee distributor address
+  const fdAddr = data.feeDistributor || cfg.feeDistributor;
+  
+  try {
+    await switchToChain(tabKey);
+    setStatus(t('confirmWallet'));
+    const s = await (new ethers.providers.Web3Provider(window.ethereum)).getSigner();
+    const fd = new ethers.Contract(fdAddr, ABI.feeDistributor, s);
+    const tx = await fd.clearMarketingWallet();
+    setStatus(`${t('submitted')}: ${shortAddr(tx.hash)}`);
+    showToast(`${t('submitted')} ${shortAddr(tx.hash)}`, 'info');
+    await tx.wait();
+    showToast(t('success'), 'success');
+    setStatus('');
+    await loadTokenData(tabKey);
+  } catch (e) {
+    const msg = e?.reason || e?.message || String(e);
+    setStatus(msg);
+    showToast(msg, 'error');
+  }
+}
+
+// ─────────── Render ───────────
+function render() {
+  renderPanel('rh', document.getElementById('panelRh'));
+  renderPanel('eth', document.getElementById('panelEth'));
+}
+
+function renderPanel(tabKey, el) {
+  const cfg = TOKENS[tabKey];
+  const data = tokenData[tabKey];
+  const isLoading = loading[tabKey];
+  const chainBadge = tabKey === 'rh' ? '<span class="chain-badge chain-rh">Robinhood</span>' : '<span class="chain-badge chain-eth">Ethereum</span>';
+
+  if (isLoading) {
+    el.innerHTML = `<div class="card"><div class="empty-state">${t('loadingToken')}</div></div>`;
+    return;
+  }
+
+  if (!data) {
+    el.innerHTML = `<div class="card"><div class="empty-state">${t('loadingToken')}</div></div>`;
+    if (!tokenData[tabKey]) loadTokenData(tabKey);
+    return;
+  }
+
+  if (data.error) {
+    el.innerHTML = `<div class="card"><div class="empty-state">Error: ${data.error}</div><button class="btn btn-secondary" onclick="loadTokenData('${tabKey}')">Retry</button></div>`;
+    return;
+  }
+
+  let html = '';
+
+  // Token header card
+  html += `<div class="card">
+    <div class="token-header">
+      <div class="token-icon">${(data.symbol || '?')[0]}</div>
+      <div class="token-meta">
+        <h3>${data.symbol || '?'} ${chainBadge}</h3>
+        <p>${data.name || ''}${data.factoryName ? ` · ${data.factoryName} Pair` : ''}</p>
+      </div>
+    </div>
+    <div class="kv-row"><span class="label">${t('token')}</span><span class="value"><a href="${explorerToken(data.address, cfg)}" target="_blank">${shortAddr(data.address)}</a></span></div>
+    <div class="kv-row"><span class="label">${t('creator')}</span><span class="value">${data.creator ? `<a href="${explorerAddr(data.creator, cfg)}" target="_blank">${shortAddr(data.creator)}</a>` : '—'}</span></div>
+    <div class="kv-row"><span class="label">${t('pool')}</span><span class="value">${data.pool ? `<a href="${explorerAddr(data.pool, cfg)}" target="_blank">${shortAddr(data.pool)}</a>` : '—'}</span></div>
+    ${data.launchId ? `<div class="kv-row"><span class="label">${t('launchId')}</span><span class="value">#${data.launchId}</span></div>` : ''}
+    ${data.tokenId ? `<div class="kv-row"><span class="label">${t('lpTokenId')}</span><span class="value">${data.tokenId}</span></div>` : ''}
+    <div class="kv-row"><span class="label">Total Supply</span><span class="value">${fmtToken(data.totalSupply, 18)}</span></div>
+  </div>`;
+
+  // Check if token was found in any factory
+  if (!data.launchId) {
+    html += `<div class="card"><div class="warning">${t('notFound')}</div></div>`;
+    html += `<button class="btn btn-secondary" onclick="loadTokenData('${tabKey}')" style="margin-top:4px">${t('refreshData')}</button>`;
+    el.innerHTML = html;
+    return;
+  }
+
+  // LP Fees section
+  html += `<div class="card">
+    <h2>${t('triggerLpFees')} <span class="badge badge-info">LP</span></h2>`;
+  if (data.hasPendingFees) {
+    html += `<div class="highlight">
+      <div class="kv-row"><span class="label">${t('feeToken0')}</span><span class="value">${fmtToken(data.pendingOwed0, 18)} ${data.symbol}</span></div>
+      <div class="kv-row"><span class="label">${t('feeToken1')}</span><span class="value">${fmtEth(data.pendingOwed1)} ${cfg.wrappedSymbol}</span></div>
+    </div>`;
+  } else {
+    html += `<div class="kv-row"><span class="label">${t('pendingFees')}</span><span class="value">${t('noFees')}</span></div>`;
+  }
+  
+  // Button label depends on config (use per-factory flag for Ethereum, global for Robinhood)
+  const showPublicBurn = data.publicFeeBurn !== undefined ? data.publicFeeBurn : cfg.publicFeeBurn;
+  const btnLabel = showPublicBurn ? t('burnToken') : t('collectFees');
+  html += `<button class="btn btn-primary" onclick="doCollectFees('${tabKey}')">${btnLabel}</button>`;
+  
+  if (showPublicBurn) {
+    html += `<small class="hint">${t('anyoneCanTrigger')}</small>`;
+  }
+  html += `</div>`;
+
+  // Fee panel (only for Robinhood which has creator fee setting)
+  if (!cfg.noCreatorFeeSetting) {
+    const isCreator = account && data.creator && account.toLowerCase() === data.creator.toLowerCase();
+    const isFeeRecipient = account && data.feeRecipient && account.toLowerCase() === data.feeRecipient.toLowerCase();
+    const canCollectFees = isCreator || isFeeRecipient;
+    
+    html += `<div class="card">
+      <h2>${isCreator ? t('creatorFeeControls') : t('tradingFeeClaim')} <span class="badge badge-warn">FEE</span></h2>
+      <p class="hint">${isCreator ? t('setFeeRecipient') : isFeeRecipient ? t('youAreRecipient') : t('creatorOrRecipient')}</p>
+      
+      <div class="kv-row"><span class="label">${t('connectedWallet')}</span><span class="value">${account ? shortAddr(account) : t('notConnected')}</span></div>
+      <div class="kv-row"><span class="label">${t('access')}</span><span class="value">${isCreator ? t('creatorRole') : isFeeRecipient ? t('feeRecipient') : t('viewOnly')}</span></div>`;
+    
+    if (data.feeRecipient) {
+      html += `<div class="kv-row"><span class="label">${t('currentRecipient')}</span><span class="value"><a href="${explorerAddr(data.feeRecipient, cfg)}" target="_blank">${shortAddr(data.feeRecipient)}</a></span></div>`;
+    }
+    if (data.platformRecipient) {
+      html += `<div class="kv-row"><span class="label">${t('platformRecipient')}</span><span class="value"><a href="${explorerAddr(data.platformRecipient, cfg)}" target="_blank">${shortAddr(data.platformRecipient)}</a></span></div>`;
+    }
+    
+    // Creator can set fee wallet
+    if (isCreator) {
+      html += `<div class="btn-group">
+        <button class="btn btn-primary" onclick="doSetMarketingWallet('${tabKey}')">${t('updateRecipient')}</button>
+        ${data.feeSource === 'custom' ? `<button class="btn btn-secondary" onclick="doClearMarketingWallet('${tabKey}')">${lang === 'zh' ? '清除钱包' : 'Clear Wallet'}</button>` : ''}
+      </div>`;
+    }
+    
+    // Collect fees button (only for creator or fee recipient)
+    if (canCollectFees && data.tokenId) {
+      html += `<button class="btn btn-success" onclick="doCollectFees('${tabKey}')" style="margin-top:12px">${t('collectFees')}</button>`;
+    } else if (!account) {
+      html += `<div class="warning">${t('connectCreator')}</div>`;
+    } else if (!canCollectFees) {
+      html += `<div class="warning">${t('noPermission')}</div>`;
+    }
+    
+    html += `</div>`;
+  }
+
+  // Refresh button
+  html += `<button class="btn btn-secondary" onclick="loadTokenData('${tabKey}')" style="margin-top:4px">${t('refreshData')}</button>`;
+
+  // Network warning
+  if (account && currentChainId && currentChainId !== cfg.chainId) {
+    html += `<div class="card" style="background:#fff3e0;border:1px solid #ffe0b2">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="color:#e65100;font-size:14px">${t('wrongNetwork')} (${cfg.chainName})</span>
+        <button class="btn btn-primary" style="width:auto;padding:6px 14px;margin:0" onclick="switchToChain('${tabKey}')">${t('switchNetwork')}</button>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+// ─────────── Init ───────────
+(async function init() {
+  document.getElementById('title').textContent = t('title');
+  if (window.ethereum) {
+    try {
+      const accs = await window.ethereum.request({ method: 'eth_accounts' });
+      if (accs && accs.length > 0) {
+        account = accs[0];
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        signer = provider.getSigner();
+        const net = await provider.getNetwork();
+        currentChainId = net.chainId;
+        document.getElementById('connectBtn').textContent = t('disconnect');
+        document.getElementById('accountInfo').textContent = `${t('connected')}: ${shortAddr(account)}`;
+      }
+    } catch {}
+  }
+  loadTokenData('rh');
+  render();
+})();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"75124c326cb447fe934cde04713ae013","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
