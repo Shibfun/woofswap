@@ -4,192 +4,654 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WoofSwap Emergency Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container { max-width: 600px; margin: 0 auto; }
-        .lang-toggle {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 16px;
-            gap: 4px;
-        }
-        .lang-btn {
-            width: auto;
-            padding: 6px 14px;
-            font-size: 13px;
-            font-weight: 500;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 6px;
-            color: #888;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .lang-btn.active {
-            background: rgba(254,202,87,0.15);
-            border-color: rgba(254,202,87,0.4);
-            color: #feca57;
-        }
-        .lang-btn:hover { border-color: rgba(255,255,255,0.3); }
-        h1 {
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 24px;
-            background: linear-gradient(90deg, #ff6b6b, #feca57);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .subtitle {
-            text-align: center;
-            color: #888;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-        .card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 20px;
-        }
-        .card-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #feca57;
-        }
-        label {
-            display: block;
-            font-size: 13px;
-            color: #aaa;
-            margin-bottom: 6px;
-        }
-        input, select {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 10px;
-            color: #fff;
-            font-size: 14px;
-            margin-bottom: 16px;
-        }
-        input:focus, select:focus { outline: none; border-color: #feca57; }
-        input::placeholder { color: #555; }
-        button {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
-            border: none;
-            border-radius: 10px;
-            color: #fff;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255,107,107,0.3);
-        }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-secondary { background: linear-gradient(135deg, #4834d4, #685de7); }
-        .btn-success { background: linear-gradient(135deg, #00b894, #00a381); }
-        .info-box {
-            background: rgba(254,202,87,0.1);
-            border: 1px solid rgba(254,202,87,0.3);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 16px;
-            font-size: 13px;
-        }
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        .info-row:last-child { border-bottom: none; }
-        .info-label { color: #888; }
-        .info-value {
-            color: #fff;
-            font-family: monospace;
-            word-break: break-all;
-            text-align: right;
-            max-width: 60%;
-        }
-        .status {
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 12px;
-            font-size: 13px;
-            word-break: break-all;
-        }
-        .status.info { background: rgba(52,152,219,0.2); border: 1px solid rgba(52,152,219,0.3); }
-        .status.success { background: rgba(39,174,96,0.2); border: 1px solid rgba(39,174,96,0.3); }
-        .status.error { background: rgba(231,76,60,0.2); border: 1px solid rgba(231,76,60,0.3); }
-        .status.pending { background: rgba(241,196,15,0.2); border: 1px solid rgba(241,196,15,0.3); }
-        .hidden { display: none; }
-        .btn-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .btn-group button { font-size: 13px; padding: 12px; }
-        .warning {
-            background: rgba(231,76,60,0.1);
-            border: 1px solid rgba(231,76,60,0.3);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 16px;
-            font-size: 12px;
-            color: #e74c3c;
-        }
+:root {
+    --woof-orange: #F5A623;
+    --woof-amber: #E8913A;
+    --woof-gold: #FFD166;
+    --woof-cream: #FFF8EC;
+    --woof-white: #FFFFFF;
+    --woof-brown: #8B5E3C;
+    --woof-dark: #4A3520;
+    --woof-light-orange: #FFF0D4;
+    --woof-pink: #FF8FA3;
+    --woof-green: #4CAF50;
+    --woof-red: #E74C3C;
+    --woof-purple: #7C5CFC;
+    --woof-bg: #FFFAF0;
+    --woof-card: #FFFFFF;
+    --woof-border: #F0E0C8;
+    --woof-shadow: 0 4px 20px rgba(245, 166, 35, 0.12);
+    --woof-shadow-hover: 0 8px 32px rgba(245, 166, 35, 0.2);
+    --radius: 20px;
+    --radius-sm: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--woof-bg);
+    color: var(--woof-dark);
+    min-height: 100vh;
+    padding: 0;
+    background-image: 
+        radial-gradient(circle at 20% 80%, rgba(255, 209, 102, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(245, 166, 35, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(255, 143, 163, 0.05) 0%, transparent 50%);
+}
+
+.app-container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+}
+
+/* === HEADER === */
+.header {
+    text-align: center;
+    padding: 24px 0 20px;
+    position: relative;
+}
+
+.header-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.dog-icon {
+    width: 52px;
+    height: 52px;
+    position: relative;
+    display: inline-block;
+}
+
+.dog-face {
+    width: 44px;
+    height: 40px;
+    background: var(--woof-orange);
+    border-radius: 50% 50% 45% 45%;
+    position: absolute;
+    bottom: 0;
+    left: 4px;
+    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.08);
+}
+
+.dog-ear {
+    width: 18px;
+    height: 22px;
+    background: var(--woof-amber);
+    position: absolute;
+    top: 0;
+    border-radius: 50% 50% 20% 20%;
+}
+
+.dog-ear.left {
+    left: 2px;
+    transform: rotate(-15deg);
+}
+
+.dog-ear.right {
+    right: 2px;
+    transform: rotate(15deg);
+}
+
+.dog-eye {
+    width: 6px;
+    height: 7px;
+    background: var(--woof-dark);
+    border-radius: 50%;
+    position: absolute;
+    top: 18px;
+}
+
+.dog-eye.left { left: 16px; }
+.dog-eye.right { right: 16px; }
+
+.dog-nose {
+    width: 10px;
+    height: 7px;
+    background: var(--woof-dark);
+    border-radius: 50%;
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.dog-mouth {
+    width: 14px;
+    height: 6px;
+    border-bottom: 2px solid var(--woof-dark);
+    border-radius: 0 0 50% 50%;
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.header h1 {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--woof-orange), var(--woof-amber));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.header .subtitle {
+    font-size: 13px;
+    color: var(--woof-brown);
+    opacity: 0.7;
+    margin-top: 2px;
+    font-weight: 600;
+}
+
+/* === LANG TOGGLE === */
+.lang-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+.lang-btn {
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    background: var(--woof-white);
+    border: 2px solid var(--woof-border);
+    border-radius: 20px;
+    color: var(--woof-brown);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.lang-btn.active {
+    background: var(--woof-orange);
+    border-color: var(--woof-orange);
+    color: white;
+    box-shadow: 0 2px 8px rgba(245, 166, 35, 0.3);
+}
+
+.lang-btn:hover:not(.active) {
+    border-color: var(--woof-orange);
+    color: var(--woof-orange);
+}
+
+/* === TABS === */
+.tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--woof-white);
+    padding: 5px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    box-shadow: var(--woof-shadow);
+    border: 1px solid var(--woof-border);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    color: var(--woof-brown);
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    opacity: 0.6;
+}
+
+.tab-btn:hover {
+    opacity: 0.8;
+    background: var(--woof-light-orange);
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, var(--woof-orange), var(--woof-amber));
+    color: white;
+    opacity: 1;
+    box-shadow: 0 2px 10px rgba(245, 166, 35, 0.3);
+}
+
+.tab-icon {
+    font-size: 16px;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* === CARDS === */
+.card {
+    background: var(--woof-card);
+    border: 1px solid var(--woof-border);
+    border-radius: var(--radius);
+    padding: 22px;
+    margin-bottom: 16px;
+    box-shadow: var(--woof-shadow);
+    transition: box-shadow 0.2s;
+}
+
+.card:hover {
+    box-shadow: var(--woof-shadow-hover);
+}
+
+.card-title {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--woof-dark);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-title .emoji {
+    font-size: 20px;
+}
+
+/* === FORM ELEMENTS === */
+label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--woof-brown);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+input, select {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--woof-cream);
+    border: 2px solid var(--woof-border);
+    border-radius: var(--radius-sm);
+    color: var(--woof-dark);
+    font-size: 14px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    transition: all 0.2s;
+    margin-bottom: 14px;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--woof-orange);
+    background: var(--woof-white);
+    box-shadow: 0 0 0 4px rgba(245, 166, 35, 0.1);
+}
+
+input::placeholder {
+    color: #C4A882;
+    font-weight: 500;
+}
+
+/* === BUTTONS === */
+button {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--woof-orange), var(--woof-amber));
+    border: none;
+    border-radius: var(--radius-sm);
+    color: white;
+    font-size: 15px;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+button::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+button:hover:not(:disabled)::after {
+    left: 100%;
+}
+
+button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 166, 35, 0.35);
+}
+
+button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, var(--woof-purple), #6344E0);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    box-shadow: 0 6px 20px rgba(124, 92, 252, 0.35);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--woof-green), #388E3C);
+}
+
+.btn-success:hover:not(:disabled) {
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.35);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--woof-red), #C0392B);
+}
+
+.btn-danger:hover:not(:disabled) {
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.35);
+}
+
+.btn-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.btn-group button {
+    font-size: 13px;
+    padding: 12px;
+}
+
+/* === INFO BOXES === */
+.info-box {
+    background: var(--woof-light-orange);
+    border: 2px solid rgba(245, 166, 35, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    margin-bottom: 14px;
+    font-size: 13px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(245, 166, 35, 0.1);
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: var(--woof-brown);
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.info-value {
+    color: var(--woof-dark);
+    font-family: 'Fredoka', monospace;
+    font-weight: 500;
+    word-break: break-all;
+    text-align: right;
+    max-width: 60%;
+    font-size: 13px;
+}
+
+/* === STATUS MESSAGES === */
+.status {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    word-break: break-all;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.status.info {
+    background: #E3F2FD;
+    border: 1px solid #90CAF9;
+    color: #1565C0;
+}
+
+.status.success {
+    background: #E8F5E9;
+    border: 1px solid #A5D6A7;
+    color: #2E7D32;
+}
+
+.status.error {
+    background: #FFEBEE;
+    border: 1px solid #EF9A9A;
+    color: #C62828;
+}
+
+.status.pending {
+    background: #FFF8E1;
+    border: 1px solid #FFE082;
+    color: #F57F17;
+}
+
+/* === WARNING === */
+.warning {
+    background: #FFF3E0;
+    border: 2px solid #FFCC80;
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    color: #E65100;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+/* === HIDDEN === */
+.hidden {
+    display: none !important;
+}
+
+/* === PAW DECORATIONS === */
+.paw-decoration {
+    position: fixed;
+    opacity: 0.04;
+    font-size: 80px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.paw-1 { top: 10%; left: 5%; transform: rotate(-30deg); }
+.paw-2 { top: 40%; right: 3%; transform: rotate(20deg); }
+.paw-3 { bottom: 15%; left: 8%; transform: rotate(-10deg); }
+.paw-4 { bottom: 30%; right: 10%; transform: rotate(35deg); }
+
+/* === WALLET BADGE === */
+.wallet-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--woof-light-orange);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--woof-brown);
+    margin-top: 10px;
+}
+
+.wallet-badge .dot {
+    width: 8px;
+    height: 8px;
+    background: var(--woof-green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* === FOOTER === */
+.footer {
+    text-align: center;
+    padding: 20px 0;
+    font-size: 12px;
+    color: var(--woof-brown);
+    opacity: 0.5;
+    font-weight: 600;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 480px) {
+    .app-container { padding: 12px 12px 30px; }
+    .header h1 { font-size: 24px; }
+    .card { padding: 18px; }
+    .tab-btn { font-size: 12px; padding: 8px 4px; }
+}
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="lang-toggle">
-            <button class="lang-btn active" id="btnEn" onclick="setLang('en')">EN</button>
-            <button class="lang-btn" id="btnZh" onclick="setLang('zh')">中文</button>
-        </div>
+<!-- Paw decorations -->
+<div class="paw-decoration paw-1">🐾</div>
+<div class="paw-decoration paw-2">🐾</div>
+<div class="paw-decoration paw-3">🐾</div>
+<div class="paw-decoration paw-4">🐾</div>
 
-        <h1 id="tTitle"></h1>
-        <p class="subtitle" id="tSubtitle"></p>
-
-        <!-- Connect Wallet -->
-        <div class="card">
-            <div class="card-title" id="tStep1"></div>
-            <button id="connectBtn" onclick="connectWallet()"></button>
-            <div id="walletInfo" class="info-box hidden" style="margin-top:16px;">
-                <div class="info-row">
-                    <span class="info-label" id="tWalletAddr"></span>
-                    <span class="info-value" id="walletAddress">-</span>
+<div class="app-container">
+    <!-- Header -->
+    <div class="header">
+        <div class="header-logo">
+            <div class="dog-icon">
+                <div class="dog-ear left"></div>
+                <div class="dog-ear right"></div>
+                <div class="dog-face">
+                    <div class="dog-eye left"></div>
+                    <div class="dog-eye right"></div>
+                    <div class="dog-nose"></div>
+                    <div class="dog-mouth"></div>
                 </div>
-                <div class="info-row">
-                    <span class="info-label" id="tBoneBal"></span>
-                    <span class="info-value" id="boneBalance">-</span>
+            </div>
+            <h1>WoofSwap</h1>
+        </div>
+        <p class="subtitle" id="tSubtitle">Emergency Tool — Unstake / Remove Liquidity</p>
+    </div>
+
+    <!-- Language Toggle -->
+    <div class="lang-toggle">
+        <button class="lang-btn active" id="btnEn">EN</button>
+        <button class="lang-btn" id="btnZh">中文</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="wallet">
+            <span class="tab-icon">🔗</span>
+            <span id="tTabWallet">Wallet</span>
+        </button>
+        <button class="tab-btn" data-tab="query">
+            <span class="tab-icon">🔍</span>
+            <span id="tTabQuery">Query</span>
+        </button>
+        <button class="tab-btn" data-tab="actions">
+            <span class="tab-icon">⚡</span>
+            <span id="tTabActions">Actions</span>
+        </button>
+    </div>
+
+    <!-- Tab 1: Wallet -->
+    <div class="tab-content active" id="tab-wallet">
+        <div class="card">
+            <div class="card-title">
+                <span class="emoji">🐕</span>
+                <span id="tStep1">Connect Wallet</span>
+            </div>
+            <button id="connectBtn">Connect MetaMask</button>
+            <div id="walletInfo" class="hidden" style="margin-top:14px;">
+                <div class="wallet-badge">
+                    <span class="dot"></span>
+                    <span id="walletAddress">-</span>
+                </div>
+                <div class="info-box" style="margin-top:12px;">
+                    <div class="info-row">
+                        <span class="info-label" id="tBoneBal">BONE Balance</span>
+                        <span class="info-value" id="boneBalance">-</span>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- Query Pair -->
         <div class="card">
-            <div class="card-title" id="tStep2"></div>
-            <div class="warning" id="tWarning"></div>
-            <label id="tPairLabel"></label>
-            <input type="text" id="pairAddress" placeholder="0x..." oninput="validateAddress(this)">
-            <button onclick="queryPair()" id="tQueryBtn"></button>
-            <div id="pairInfo" class="info-box hidden" style="margin-top:16px;">
+            <div class="card-title">
+                <span class="emoji">📖</span>
+                <span id="tInstrTitle">Instructions</span>
+            </div>
+            <div id="tInstrBody" style="font-size:13px;color:var(--woof-brown);line-height:1.8;padding-left:16px;">
+                <ol style="padding-left:4px;">
+                    <li>Connect your MetaMask wallet and switch to <b>Shibarium</b></li>
+                    <li>Enter your LP Pair contract address</li>
+                    <li>Click "Query Pair Info" to load pool details</li>
+                    <li>Check your position: LP balance, staked amount, rewards</li>
+                    <li>Perform actions: Unstake, Claim, or Remove Liquidity</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 2: Query -->
+    <div class="tab-content" id="tab-query">
+        <div class="card">
+            <div class="card-title">
+                <span class="emoji">🔎</span>
+                <span id="tStep2">Enter Pair Address</span>
+            </div>
+            <div class="warning" id="tWarning">⚠️ Enter the LP Pair contract address, NOT a token address. Find it on woofswap.finance liquidity page.</div>
+            <label id="tPairLabel">Pair Contract Address</label>
+            <input type="text" id="pairAddress" placeholder="0x...">
+            <button id="tQueryBtn">Query Pair Info</button>
+            <div id="pairInfo" class="info-box hidden" style="margin-top:14px;">
                 <div class="info-row">
                     <span class="info-label">Token0</span>
                     <span class="info-value" id="token0">-</span>
@@ -199,495 +661,516 @@
                     <span class="info-value" id="token1">-</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label" id="tStableLabel"></span>
+                    <span class="info-label" id="tStableLabel">Stable Pool</span>
                     <span class="info-value" id="isStable">-</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label" id="tGaugeLabel"></span>
+                    <span class="info-label" id="tGaugeLabel">Gauge Address</span>
                     <span class="info-value" id="gaugeAddress">-</span>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Position -->
+    <!-- Tab 3: Actions -->
+    <div class="tab-content" id="tab-actions">
         <div class="card hidden" id="positionCard">
-            <div class="card-title" id="tStep3"></div>
+            <div class="card-title">
+                <span class="emoji">📊</span>
+                <span id="tStep3">Your Position</span>
+            </div>
             <div class="info-box">
                 <div class="info-row">
-                    <span class="info-label" id="tLpBalLabel"></span>
+                    <span class="info-label" id="tLpBalLabel">LP Balance (unstaked)</span>
                     <span class="info-value" id="lpBalance">-</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label" id="tGaugeBalLabel"></span>
+                    <span class="info-label" id="tGaugeBalLabel">Gauge Staked</span>
                     <span class="info-value" id="gaugeBalance">-</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label" id="tRewardLabel"></span>
+                    <span class="info-label" id="tRewardLabel">Pending Rewards</span>
                     <span class="info-value" id="pendingRewards">-</span>
                 </div>
             </div>
             <div class="btn-group" id="gaugeActions">
-                <button class="btn-secondary" onclick="unstake()" id="tUnstakeBtn"></button>
-                <button class="btn-success" onclick="claimRewards()" id="tClaimBtn"></button>
+                <button class="btn-secondary" id="tUnstakeBtn">Unstake</button>
+                <button class="btn-success" id="tClaimBtn">Claim Rewards</button>
             </div>
-            <button style="margin-top:10px;" onclick="removeLiquidity()" id="tRemoveBtn"></button>
+            <button class="btn-danger" style="margin-top:12px;" id="tRemoveBtn">Remove Liquidity (All)</button>
             <div id="actionStatus"></div>
         </div>
-
-        <!-- Instructions -->
-        <div class="card">
-            <div class="card-title" id="tInstrTitle"></div>
-            <div id="tInstrBody"></div>
+        <div class="card" id="noPositionCard">
+            <div style="text-align:center;padding:30px 0;">
+                <div style="font-size:48px;margin-bottom:12px;">🐶</div>
+                <p style="color:var(--woof-brown);font-weight:600;font-size:14px;" id="tNoPosition">
+                    Query a pair first to see your position
+                </p>
+            </div>
         </div>
     </div>
 
-    <script>
-        // ── i18n ──
-        let lang = 'en';
-        const I18N = {
-            en: {
-                title: 'WoofSwap Emergency Tool',
-                subtitle: 'Shibarium Network \u2014 Unstake / Remove Liquidity',
-                step1: '1. Connect Wallet',
-                connect: 'Connect MetaMask',
-                connected: 'Connected',
-                walletAddr: 'Wallet Address',
-                boneBal: 'BONE Balance',
-                step2: '2. Enter Pair Address',
-                warning: '\u26a0\ufe0f Enter the LP Pair contract address, NOT a token address. You can find it on the woofswap.finance liquidity page.',
-                pairLabel: 'Pair Contract Address',
-                queryBtn: 'Query Pair Info',
-                stableLabel: 'Stable Pool',
-                gaugeLabel: 'Gauge Address',
-                stableYes: 'Yes (Stable)',
-                stableNo: 'No (Volatile)',
-                none: 'None',
-                step3: '3. Your Position',
-                lpBalLabel: 'LP Balance (unstaked)',
-                gaugeBalLabel: 'Gauge Staked',
-                rewardLabel: 'Pending Rewards',
-                unstakeBtn: 'Unstake',
-                claimBtn: 'Claim Rewards',
-                removeBtn: 'Remove Liquidity (All)',
-                instrTitle: 'Instructions',
-                instrBody: '<ol style="padding-left:20px;font-size:13px;color:#aaa;line-height:1.8;">'
-                    + '<li>Connect your MetaMask wallet and switch to the <b>Shibarium</b> network</li>'
-                    + '<li>Enter your LP Pair contract address</li>'
-                    + '<li>Click "Query Pair Info" to load pool details</li>'
-                    + '<li>Check your position: LP balance, staked amount, pending rewards</li>'
-                    + '<li>Perform the action you need:'
-                    + '<ul style="margin-top:8px;">'
-                    + '<li><b>Unstake</b>: Withdraw LP tokens from the Gauge back to your wallet</li>'
-                    + '<li><b>Claim Rewards</b>: Collect earned WOOF rewards</li>'
-                    + '<li><b>Remove Liquidity</b>: Swap LP tokens back to the underlying tokens (unstake first)</li>'
-                    + '</ul></li></ol>',
-                // status messages
-                installMM: 'Please install MetaMask',
-                connectFail: 'Connection failed: ',
-                walletOk: 'Wallet connected',
-                connectFirst: 'Please connect your wallet first',
-                invalidAddr: 'Please enter a valid address',
-                querying: 'Querying pair info...',
-                queryOk: 'Query successful',
-                queryFail: 'Query failed: ',
-                noStaked: 'No staked LP to unstake',
-                unstaking: 'Unstaking...',
-                txSubmitted: 'Transaction submitted: ',
-                unstakeOk: 'Unstaked successfully!',
-                unstakeFail: 'Unstake failed: ',
-                claiming: 'Claiming rewards...',
-                claimOk: 'Rewards claimed successfully!',
-                claimFail: 'Claim failed: ',
-                noLp: 'No LP tokens to remove',
-                unstakeFirst: 'Please unstake first before removing liquidity',
-                removing: 'Removing liquidity...',
-                approving: 'Approving LP tokens...',
-                removeOk: 'Liquidity removed successfully!',
-                removeFail: 'Remove failed: ',
-                noGauge: 'This pair has no Gauge (no staking)',
-            },
-            zh: {
-                title: 'WoofSwap \u7d27\u6025\u5de5\u5177',
-                subtitle: 'Shibarium \u7f51\u7edc \u2014 \u64a4\u9500\u8d28\u62bc / \u79fb\u9664\u6d41\u52a8\u6027',
-                step1: '1. \u8fde\u63a5\u94b1\u5305',
-                connect: '\u8fde\u63a5 MetaMask',
-                connected: '\u5df2\u8fde\u63a5',
-                walletAddr: '\u94b1\u5305\u5730\u5740',
-                boneBal: 'BONE \u4f59\u989d',
-                step2: '2. \u8f93\u5165\u914d\u5bf9\u5730\u5740',
-                warning: '\u26a0\ufe0f \u8bf7\u8f93\u5165 LP \u914d\u5bf9\u5408\u7ea6\u5730\u5740\uff08Pair Address\uff09\uff0c\u4e0d\u662f\u4ee3\u5e01\u5730\u5740\u3002\u914d\u5bf9\u5730\u5740\u53ef\u4ee5\u5728 woofswap.finance \u7684\u6d41\u52a8\u6027\u9875\u9762\u627e\u5230\u3002',
-                pairLabel: '\u914d\u5bf9\u5408\u7ea6\u5730\u5740 (Pair Address)',
-                queryBtn: '\u67e5\u8be2\u914d\u5bf9\u4fe1\u606f',
-                stableLabel: '\u7a33\u5b9a\u6c60',
-                gaugeLabel: 'Gauge \u5730\u5740',
-                stableYes: '\u662f (Stable)',
-                stableNo: '\u5426 (Volatile)',
-                none: '\u65e0',
-                step3: '3. \u4f60\u7684\u6301\u4ed3',
-                lpBalLabel: 'LP \u4f59\u989d\uff08\u672a\u8d28\u62bc\uff09',
-                gaugeBalLabel: 'Gauge \u8d28\u62bc\u6570\u91cf',
-                rewardLabel: '\u5f85\u9886\u53d6\u5956\u52b1',
-                unstakeBtn: '\u64a4\u9500\u8d28\u62bc',
-                claimBtn: '\u9886\u53d6\u5956\u52b1',
-                removeBtn: '\u79fb\u9664\u6d41\u52a8\u6027\uff08\u5168\u90e8\uff09',
-                instrTitle: '\u4f7f\u7528\u8bf4\u660e',
-                instrBody: '<ol style="padding-left:20px;font-size:13px;color:#aaa;line-height:1.8;">'
-                    + '<li>\u8fde\u63a5\u4f60\u7684 MetaMask \u94b1\u5305\uff0c\u786e\u4fdd\u7f51\u7edc\u5207\u6362\u5230 <b>Shibarium</b></li>'
-                    + '<li>\u8f93\u5165\u4f60\u7684 LP \u914d\u5bf9\u5408\u7ea6\u5730\u5740</li>'
-                    + '<li>\u70b9\u51fb\u201c\u67e5\u8be2\u914d\u5bf9\u4fe1\u606f\u201d\u83b7\u53d6\u6c60\u5b50\u8be6\u60c5</li>'
-                    + '<li>\u67e5\u770b\u4f60\u7684\u6301\u4ed3\uff1aLP\u4f59\u989d\u3001\u8d28\u62bc\u6570\u91cf\u3001\u5f85\u9886\u5956\u52b1</li>'
-                    + '<li>\u6839\u636e\u9700\u8981\u6267\u884c\u64cd\u4f5c\uff1a'
-                    + '<ul style="margin-top:8px;">'
-                    + '<li><b>\u64a4\u9500\u8d28\u62bc</b>\uff1a\u5c06 Gauge \u4e2d\u7684 LP \u53d6\u56de\u5230\u94b1\u5305</li>'
-                    + '<li><b>\u9886\u53d6\u5956\u52b1</b>\uff1a\u9886\u53d6\u8d28\u62bc\u4ea7\u751f\u7684 WOOF \u5956\u52b1</li>'
-                    + '<li><b>\u79fb\u9664\u6d41\u52a8\u6027</b>\uff1a\u5c06 LP \u4ee3\u5e01\u6362\u56de\u539f\u59cb\u4ee3\u5e01\uff08\u9700\u5148\u64a4\u9500\u8d28\u62bc\uff09</li>'
-                    + '</ul></li></ol>',
-                installMM: '\u8bf7\u5b89\u88c5 MetaMask \u94b1\u5305',
-                connectFail: '\u8fde\u63a5\u5931\u8d25: ',
-                walletOk: '\u94b1\u5305\u5df2\u8fde\u63a5',
-                connectFirst: '\u8bf7\u5148\u8fde\u63a5\u94b1\u5305',
-                invalidAddr: '\u8bf7\u8f93\u5165\u6709\u6548\u7684\u5730\u5740',
-                querying: '\u6b63\u5728\u67e5\u8be2\u914d\u5bf9\u4fe1\u606f...',
-                queryOk: '\u67e5\u8be2\u6210\u529f',
-                queryFail: '\u67e5\u8be2\u5931\u8d25: ',
-                noStaked: '\u6ca1\u6709\u8d28\u62bc\u7684 LP \u53ef\u4ee5\u64a4\u9500',
-                unstaking: '\u6b63\u5728\u64a4\u9500\u8d28\u62bc...',
-                txSubmitted: '\u4ea4\u6613\u5df2\u63d0\u4ea4: ',
-                unstakeOk: '\u64a4\u9500\u8d28\u62bc\u6210\u529f\uff01',
-                unstakeFail: '\u64a4\u9500\u5931\u8d25: ',
-                claiming: '\u6b63\u5728\u9886\u53d6\u5956\u52b1...',
-                claimOk: '\u9886\u53d6\u5956\u52b1\u6210\u529f\uff01',
-                claimFail: '\u9886\u53d6\u5931\u8d25: ',
-                noLp: '\u6ca1\u6709 LP \u53ef\u4ee5\u79fb\u9664',
-                unstakeFirst: '\u8bf7\u5148\u64a4\u9500\u8d28\u62bc\u518d\u79fb\u9664\u6d41\u52a8\u6027',
-                removing: '\u6b63\u5728\u79fb\u9664\u6d41\u52a8\u6027...',
-                approving: '\u6b63\u5728\u6388\u6743 LP \u4ee3\u5e01...',
-                removeOk: '\u79fb\u9664\u6d41\u52a8\u6027\u6210\u529f\uff01',
-                removeFail: '\u79fb\u9664\u5931\u8d25: ',
-                noGauge: '\u8be5\u914d\u5bf9\u6ca1\u6709 Gauge\uff08\u65e0\u8d28\u62bc\uff09',
+    <div class="footer">
+        WoofSwap Emergency Tool · Shibarium Network
+    </div>
+</div>
+<script>
+// ── i18n ──
+let lang = 'en';
+const I18N = {
+    en: {
+        subtitle: 'Emergency Tool — Unstake / Remove Liquidity',
+        tabWallet: 'Wallet',
+        tabQuery: 'Query',
+        tabActions: 'Actions',
+        step1: 'Connect Wallet',
+        connect: 'Connect MetaMask',
+        connected: 'Connected ✓',
+        walletAddr: 'Wallet Address',
+        boneBal: 'BONE Balance',
+        step2: 'Enter Pair Address',
+        warning: '⚠️ Enter the LP Pair contract address, NOT a token address. Find it on woofswap.finance liquidity page.',
+        pairLabel: 'Pair Contract Address',
+        queryBtn: 'Query Pair Info',
+        stableLabel: 'Stable Pool',
+        gaugeLabel: 'Gauge Address',
+        stableYes: 'Yes (Stable)',
+        stableNo: 'No (Volatile)',
+        none: 'None',
+        step3: 'Your Position',
+        lpBalLabel: 'LP Balance (unstaked)',
+        gaugeBalLabel: 'Gauge Staked',
+        rewardLabel: 'Pending Rewards',
+        unstakeBtn: 'Unstake',
+        claimBtn: 'Claim Rewards',
+        removeBtn: 'Remove Liquidity (All)',
+        instrTitle: 'Instructions',
+        noPosition: 'Query a pair first to see your position',
+        installMM: 'Please install MetaMask',
+        connectFail: 'Connection failed: ',
+        walletOk: 'Wallet connected!',
+        connectFirst: 'Please connect your wallet first',
+        invalidAddr: 'Please enter a valid address',
+        querying: 'Querying pair info...',
+        queryOk: 'Query successful!',
+        queryFail: 'Query failed: ',
+        noStaked: 'No staked LP to unstake',
+        unstaking: 'Unstaking...',
+        txSubmitted: 'Transaction submitted: ',
+        unstakeOk: 'Unstaked successfully!',
+        unstakeFail: 'Unstake failed: ',
+        claiming: 'Claiming rewards...',
+        claimOk: 'Rewards claimed!',
+        claimFail: 'Claim failed: ',
+        noLp: 'No LP tokens to remove',
+        unstakeFirst: 'Please unstake first',
+        removing: 'Removing liquidity...',
+        approving: 'Approving LP tokens...',
+        removeOk: 'Liquidity removed!',
+        removeFail: 'Remove failed: ',
+        noGauge: 'This pair has no Gauge',
+    },
+    zh: {
+        subtitle: '紧急工具 — 撤销质押 / 移除流动性',
+        tabWallet: '钱包',
+        tabQuery: '查询',
+        tabActions: '操作',
+        step1: '连接钱包',
+        connect: '连接 MetaMask',
+        connected: '已连接 ✓',
+        walletAddr: '钱包地址',
+        boneBal: 'BONE 余额',
+        step2: '输入配对地址',
+        warning: '⚠️ 请输入 LP 配对合约地址（Pair Address），不是代币地址。可在 woofswap.finance 流动性页面找到。',
+        pairLabel: '配对合约地址',
+        queryBtn: '查询配对信息',
+        stableLabel: '稳定池',
+        gaugeLabel: 'Gauge 地址',
+        stableYes: '是 (Stable)',
+        stableNo: '否 (Volatile)',
+        none: '无',
+        step3: '你的持仓',
+        lpBalLabel: 'LP 余额（未质押）',
+        gaugeBalLabel: 'Gauge 质押数量',
+        rewardLabel: '待领取奖励',
+        unstakeBtn: '撤销质押',
+        claimBtn: '领取奖励',
+        removeBtn: '移除流动性（全部）',
+        instrTitle: '使用说明',
+        noPosition: '请先查询配对以查看持仓',
+        installMM: '请安装 MetaMask 钱包',
+        connectFail: '连接失败: ',
+        walletOk: '钱包已连接！',
+        connectFirst: '请先连接钱包',
+        invalidAddr: '请输入有效的地址',
+        querying: '正在查询配对信息...',
+        queryOk: '查询成功！',
+        queryFail: '查询失败: ',
+        noStaked: '没有质押的 LP 可以撤销',
+        unstaking: '正在撤销质押...',
+        txSubmitted: '交易已提交: ',
+        unstakeOk: '撤销质押成功！',
+        unstakeFail: '撤销失败: ',
+        claiming: '正在领取奖励...',
+        claimOk: '领取奖励成功！',
+        claimFail: '领取失败: ',
+        noLp: '没有 LP 可以移除',
+        unstakeFirst: '请先撤销质押',
+        removing: '正在移除流动性...',
+        approving: '正在授权 LP 代币...',
+        removeOk: '移除流动性成功！',
+        removeFail: '移除失败: ',
+        noGauge: '该配对没有 Gauge（无质押）',
+    }
+};
+
+function t(key) { return I18N[lang][key] || key; }
+
+function setLang(l) {
+    lang = l;
+    document.getElementById('btnEn').classList.toggle('active', l === 'en');
+    document.getElementById('btnZh').classList.toggle('active', l === 'zh');
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+    applyI18n();
+    if (currentPair) refreshPairUI();
+}
+
+function applyI18n() {
+    document.getElementById('tSubtitle').textContent = t('subtitle');
+    document.getElementById('tTabWallet').textContent = t('tabWallet');
+    document.getElementById('tTabQuery').textContent = t('tabQuery');
+    document.getElementById('tTabActions').textContent = t('tabActions');
+    document.getElementById('tStep1').textContent = t('step1');
+    document.getElementById('connectBtn').textContent =
+        document.getElementById('connectBtn').disabled ? t('connected') : t('connect');
+    document.getElementById('tBoneBal').textContent = t('boneBal');
+    document.getElementById('tStep2').textContent = t('step2');
+    document.getElementById('tWarning').textContent = t('warning');
+    document.getElementById('tPairLabel').textContent = t('pairLabel');
+    document.getElementById('tQueryBtn').textContent = t('queryBtn');
+    document.getElementById('tStableLabel').textContent = t('stableLabel');
+    document.getElementById('tGaugeLabel').textContent = t('gaugeLabel');
+    document.getElementById('tStep3').textContent = t('step3');
+    document.getElementById('tLpBalLabel').textContent = t('lpBalLabel');
+    document.getElementById('tGaugeBalLabel').textContent = t('gaugeBalLabel');
+    document.getElementById('tRewardLabel').textContent = t('rewardLabel');
+    document.getElementById('tUnstakeBtn').textContent = t('unstakeBtn');
+    document.getElementById('tClaimBtn').textContent = t('claimBtn');
+    document.getElementById('tRemoveBtn').textContent = t('removeBtn');
+    document.getElementById('tInstrTitle').textContent = t('instrTitle');
+    document.getElementById('tNoPosition').textContent = t('noPosition');
+}
+
+// ── Tab Switching ──
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === 'tab-' + tabName);
+    });
+}
+
+// ── Shibarium config ──
+const CONFIG = {
+    chainId: 109,
+    chainIdHex: '0x6d',
+    rpcUrl: 'https://www.shibrpc.com',
+    explorer: 'https://www.shibariumscan.io',
+    router: '0x96b16aBD53Bfd765F4CD118590C1d0be8B57DE24',
+    factory: '0xB9fbdFA27B7ba8BB2d4bB4aB399e4c55F0F7F83a',
+    voter: '0x30d9159c8c9e403A0e9597837052F70cf8eC362c',
+    wbone: '0x839FdB6cc98342B428E074C1573ADF6D48CA3bFd',
+    woof: '0xD0daa7B6ff1B40d3cc6F0B2Cf7E85cB993D1c834',
+};
+
+const ABI = {
+    pair: [
+        'function token0() view returns (address)',
+        'function token1() view returns (address)',
+        'function stable() view returns (bool)',
+        'function balanceOf(address) view returns (uint256)',
+        'function decimals() view returns (uint8)',
+        'function approve(address,uint256) returns (bool)',
+        'function allowance(address,address) view returns (uint256)'
+    ],
+    voter: [
+        'function gauges(address pair) view returns (address)'
+    ],
+    gauge: [
+        'function balanceOf(address) view returns (uint256)',
+        'function deposit(uint256 amount, uint256 tokenId) external',
+        'function withdraw(uint256 amount) external',
+        'function getReward(address account, address[] tokens) external',
+        'function earned(address token, address account) view returns (uint256)'
+    ],
+    erc20: [
+        'function name() view returns (string)',
+        'function symbol() view returns (string)',
+        'function decimals() view returns (uint8)',
+        'function balanceOf(address) view returns (uint256)'
+    ],
+    router: [
+        'function removeLiquidity(address tokenA, address tokenB, bool stable, uint256 liquidity, uint256 amountAMin, uint256 amountBMin, address to, uint256 deadline) returns (uint256 amountA, uint256 amountB)',
+        'function removeLiquidityETH(address token, bool stable, uint256 liquidity, uint256 amountTokenMin, uint256 amountETHMin, address to, uint256 deadline) returns (uint256 amountToken, uint256 amountETH)'
+    ]
+};
+
+// ── State ──
+let provider = null;
+let signer = null;
+let account = null;
+let currentPair = null;
+let pairContract = null;
+let gaugeContract = null;
+
+// ── Connect Wallet ──
+async function connectWallet() {
+    if (!window.ethereum) { showStatus('error', t('installMM')); return; }
+    try {
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        if (chainId !== CONFIG.chainIdHex) {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: CONFIG.chainIdHex }]
+                });
+            } catch (e) {
+                if (e.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: CONFIG.chainIdHex,
+                            chainName: 'Shibarium',
+                            nativeCurrency: { name: 'BONE', symbol: 'BONE', decimals: 18 },
+                            rpcUrls: [CONFIG.rpcUrl],
+                            blockExplorerUrls: [CONFIG.explorer]
+                        }]
+                    });
+                } else throw e;
             }
+        }
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send('eth_requestAccounts', []);
+        signer = provider.getSigner();
+        account = await signer.getAddress();
+
+        document.getElementById('walletAddress').textContent = shortenAddress(account);
+        const balance = await provider.getBalance(account);
+        document.getElementById('boneBalance').textContent = ethers.utils.formatEther(balance) + ' BONE';
+        document.getElementById('walletInfo').classList.remove('hidden');
+        document.getElementById('connectBtn').textContent = t('connected');
+        document.getElementById('connectBtn').disabled = true;
+        showStatus('success', t('walletOk'));
+    } catch (error) {
+        showStatus('error', t('connectFail') + error.message);
+    }
+}
+
+// ── Query Pair ──
+async function queryPair() {
+    if (!provider) { showStatus('error', t('connectFirst')); return; }
+    const pairAddr = document.getElementById('pairAddress').value.trim();
+    if (!ethers.utils.isAddress(pairAddr)) { showStatus('error', t('invalidAddr')); return; }
+    try {
+        showStatus('info', t('querying'));
+        pairContract = new ethers.Contract(pairAddr, ABI.pair, provider);
+        const voterContract = new ethers.Contract(CONFIG.voter, ABI.voter, provider);
+        const [token0Addr, token1Addr, stable, gaugeAddr] = await Promise.all([
+            pairContract.token0(),
+            pairContract.token1(),
+            pairContract.stable(),
+            voterContract.gauges(pairAddr)
+        ]);
+        const token0Contract = new ethers.Contract(token0Addr, ABI.erc20, provider);
+        const token1Contract = new ethers.Contract(token1Addr, ABI.erc20, provider);
+        const [symbol0, symbol1] = await Promise.all([
+            token0Contract.symbol(),
+            token1Contract.symbol()
+        ]);
+        currentPair = {
+            address: pairAddr, token0: token0Addr, token1: token1Addr,
+            symbol0, symbol1, stable, gauge: gaugeAddr
         };
-
-        function t(key) { return I18N[lang][key] || key; }
-
-        function setLang(l) {
-            lang = l;
-            document.getElementById('btnEn').classList.toggle('active', l === 'en');
-            document.getElementById('btnZh').classList.toggle('active', l === 'zh');
-            document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
-            applyI18n();
-            // re-render dynamic content if pair was already queried
-            if (currentPair) refreshPairUI();
+        if (gaugeAddr !== ethers.constants.AddressZero) {
+            gaugeContract = new ethers.Contract(gaugeAddr, ABI.gauge, signer);
+        } else {
+            gaugeContract = null;
         }
+        refreshPairUI();
+        await queryUserPosition();
+        showStatus('success', t('queryOk'));
+        // Auto-switch to actions tab
+        switchTab('actions');
+    } catch (error) {
+        showStatus('error', t('queryFail') + error.message);
+    }
+}
 
-        function applyI18n() {
-            document.getElementById('tTitle').textContent = t('title');
-            document.getElementById('tSubtitle').textContent = t('subtitle');
-            document.getElementById('tStep1').textContent = t('step1');
-            document.getElementById('connectBtn').textContent =
-                document.getElementById('connectBtn').disabled ? t('connected') : t('connect');
-            document.getElementById('tWalletAddr').textContent = t('walletAddr');
-            document.getElementById('tBoneBal').textContent = t('boneBal');
-            document.getElementById('tStep2').textContent = t('step2');
-            document.getElementById('tWarning').textContent = t('warning');
-            document.getElementById('tPairLabel').textContent = t('pairLabel');
-            document.getElementById('tQueryBtn').textContent = t('queryBtn');
-            document.getElementById('tStableLabel').textContent = t('stableLabel');
-            document.getElementById('tGaugeLabel').textContent = t('gaugeLabel');
-            document.getElementById('tStep3').textContent = t('step3');
-            document.getElementById('tLpBalLabel').textContent = t('lpBalLabel');
-            document.getElementById('tGaugeBalLabel').textContent = t('gaugeBalLabel');
-            document.getElementById('tRewardLabel').textContent = t('rewardLabel');
-            document.getElementById('tUnstakeBtn').textContent = t('unstakeBtn');
-            document.getElementById('tClaimBtn').textContent = t('claimBtn');
-            document.getElementById('tRemoveBtn').textContent = t('removeBtn');
-            document.getElementById('tInstrTitle').textContent = t('instrTitle');
-            document.getElementById('tInstrBody').innerHTML = t('instrBody');
+function refreshPairUI() {
+    if (!currentPair) return;
+    document.getElementById('token0').textContent =
+        `${currentPair.symbol0} (${shortenAddress(currentPair.token0)})`;
+    document.getElementById('token1').textContent =
+        `${currentPair.symbol1} (${shortenAddress(currentPair.token1)})`;
+    document.getElementById('isStable').textContent =
+        currentPair.stable ? t('stableYes') : t('stableNo');
+    document.getElementById('gaugeAddress').textContent =
+        currentPair.gauge === ethers.constants.AddressZero ? t('none') : shortenAddress(currentPair.gauge);
+    document.getElementById('pairInfo').classList.remove('hidden');
+}
+
+// ── User Position ──
+async function queryUserPosition() {
+    if (!currentPair || !account) return;
+    try {
+        const [lpBalance, gaugeBalance, earned] = await Promise.all([
+            pairContract.balanceOf(account),
+            currentPair.gauge !== ethers.constants.AddressZero && gaugeContract
+                ? gaugeContract.balanceOf(account)
+                : Promise.resolve(ethers.constants.Zero),
+            currentPair.gauge !== ethers.constants.AddressZero && gaugeContract
+                ? gaugeContract.earned(CONFIG.woof, account)
+                : Promise.resolve(ethers.constants.Zero)
+        ]);
+        const decimals = await pairContract.decimals();
+        document.getElementById('lpBalance').textContent =
+            parseFloat(ethers.utils.formatUnits(lpBalance, decimals)).toFixed(6);
+        document.getElementById('gaugeBalance').textContent =
+            parseFloat(ethers.utils.formatUnits(gaugeBalance, decimals)).toFixed(6);
+        document.getElementById('pendingRewards').textContent =
+            parseFloat(ethers.utils.formatUnits(earned, 18)).toFixed(4) + ' WOOF';
+        document.getElementById('positionCard').classList.remove('hidden');
+        document.getElementById('noPositionCard').classList.add('hidden');
+        const gaugeActions = document.getElementById('gaugeActions');
+        if (gaugeContract) {
+            gaugeActions.style.display = 'grid';
+        } else {
+            gaugeActions.style.display = 'none';
         }
+        currentPair.lpBalance = lpBalance;
+        currentPair.gaugeBalance = gaugeBalance;
+        currentPair.decimals = decimals;
+    } catch (error) {
+        console.error('queryUserPosition error:', error);
+    }
+}
 
-        // ── Shibarium config ──
-        const CONFIG = {
-            chainId: 109,
-            chainIdHex: '0x6d',
-            rpcUrl: 'https://www.shibrpc.com',
-            explorer: 'https://www.shibariumscan.io',
-            router: '0x96b16aBD53Bfd765F4CD118590C1d0be8B57DE24',
-            factory: '0xB9fbdFA27B7ba8BB2d4bB4aB399e4c55F0F7F83a',
-            voter: '0x30d9159c8c9e403A0e9597837052F70cf8eC362c',
-            wbone: '0x839FdB6cc98342B428E074C1573ADF6D48CA3bFd',
-            woof: '0xD0daa7B6ff1B40d3cc6F0B2Cf7E85cB993D1c834',
-        };
+// ── Unstake ──
+async function unstake() {
+    if (!currentPair) { showStatus('error', t('connectFirst')); return; }
+    if (!gaugeContract) { showStatus('error', t('noGauge')); return; }
+    if (currentPair.gaugeBalance.isZero()) { showStatus('error', t('noStaked')); return; }
+    try {
+        showActionStatus('pending', t('unstaking'));
+        const tx = await gaugeContract.withdraw(currentPair.gaugeBalance);
+        showActionStatus('pending', t('txSubmitted') + shortenAddress(tx.hash));
+        await tx.wait();
+        showActionStatus('success', t('unstakeOk'));
+        await queryUserPosition();
+    } catch (error) {
+        showActionStatus('error', t('unstakeFail') + (error.reason || error.message));
+    }
+}
 
-        const ABI = {
-            pair: [
-                'function token0() view returns (address)',
-                'function token1() view returns (address)',
-                'function stable() view returns (bool)',
-                'function balanceOf(address) view returns (uint256)',
-                'function decimals() view returns (uint8)',
-                'function approve(address,uint256) returns (bool)',
-                'function allowance(address,address) view returns (uint256)'
-            ],
-            voter: [
-                'function gauges(address pair) view returns (address)'
-            ],
-            gauge: [
-                'function balanceOf(address) view returns (uint256)',
-                'function deposit(uint256 amount, uint256 tokenId) external',
-                'function withdraw(uint256 amount) external',
-                'function getReward(address account, address[] tokens) external',
-                'function earned(address token, address account) view returns (uint256)'
-            ],
-            erc20: [
-                'function name() view returns (string)',
-                'function symbol() view returns (string)',
-                'function decimals() view returns (uint8)',
-                'function balanceOf(address) view returns (uint256)'
-            ],
-            router: [
-                'function removeLiquidity(address tokenA, address tokenB, bool stable, uint256 liquidity, uint256 amountAMin, uint256 amountBMin, address to, uint256 deadline) returns (uint256 amountA, uint256 amountB)',
-                'function removeLiquidityETH(address token, bool stable, uint256 liquidity, uint256 amountTokenMin, uint256 amountETHMin, address to, uint256 deadline) returns (uint256 amountToken, uint256 amountETH)'
-            ]
-        };
+// ── Claim Rewards ──
+async function claimRewards() {
+    if (!currentPair) { showStatus('error', t('connectFirst')); return; }
+    if (!gaugeContract) { showStatus('error', t('noGauge')); return; }
+    try {
+        showActionStatus('pending', t('claiming'));
+        const tx = await gaugeContract.getReward(account, [CONFIG.woof]);
+        showActionStatus('pending', t('txSubmitted') + shortenAddress(tx.hash));
+        await tx.wait();
+        showActionStatus('success', t('claimOk'));
+        await queryUserPosition();
+    } catch (error) {
+        showActionStatus('error', t('claimFail') + (error.reason || error.message));
+    }
+}
 
-        // ── State ──
-        let provider = null;
-        let signer = null;
-        let account = null;
-        let currentPair = null;
-        let pairContract = null;
-        let gaugeContract = null;
-
-        // ── Connect Wallet ──
-        async function connectWallet() {
-            if (!window.ethereum) { showStatus('error', t('installMM')); return; }
-            try {
-                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-                if (chainId !== CONFIG.chainIdHex) {
-                    try {
-                        await window.ethereum.request({
-                            method: 'wallet_switchEthereumChain',
-                            params: [{ chainId: CONFIG.chainIdHex }]
-                        });
-                    } catch (e) {
-                        if (e.code === 4902) {
-                            await window.ethereum.request({
-                                method: 'wallet_addEthereumChain',
-                                params: [{
-                                    chainId: CONFIG.chainIdHex,
-                                    chainName: 'Shibarium',
-                                    nativeCurrency: { name: 'BONE', symbol: 'BONE', decimals: 18 },
-                                    rpcUrls: [CONFIG.rpcUrl],
-                                    blockExplorerUrls: [CONFIG.explorer]
-                                }]
-                            });
-                        } else throw e;
-                    }
-                }
-                provider = new ethers.providers.Web3Provider(window.ethereum);
-                await provider.send('eth_requestAccounts', []);
-                signer = provider.getSigner();
-                account = await signer.getAddress();
-
-                document.getElementById('walletAddress').textContent = shortenAddress(account);
-                const balance = await provider.getBalance(account);
-                document.getElementById('boneBalance').textContent = ethers.utils.formatEther(balance) + ' BONE';
-                document.getElementById('walletInfo').classList.remove('hidden');
-                document.getElementById('connectBtn').textContent = t('connected');
-                document.getElementById('connectBtn').disabled = true;
-                showStatus('success', t('walletOk'));
-            } catch (error) {
-                showStatus('error', t('connectFail') + error.message);
-            }
+// ── Remove Liquidity ──
+async function removeLiquidity() {
+    if (!currentPair || !pairContract) { showStatus('error', t('connectFirst')); return; }
+    const totalLp = currentPair.lpBalance.add(currentPair.gaugeBalance);
+    if (totalLp.isZero()) { showStatus('error', t('noLp')); return; }
+    if (!currentPair.gaugeBalance.isZero()) { showStatus('error', t('unstakeFirst')); return; }
+    try {
+        showActionStatus('pending', t('removing'));
+        const routerContract = new ethers.Contract(CONFIG.router, ABI.router, signer);
+        const deadline = Math.floor(Date.now() / 1000) + 1200;
+        const allowance = await pairContract.allowance(account, CONFIG.router);
+        if (allowance.lt(currentPair.lpBalance)) {
+            showActionStatus('pending', t('approving'));
+            pairContract = pairContract.connect(signer);
+            const approveTx = await pairContract.approve(CONFIG.router, ethers.constants.MaxUint256);
+            await approveTx.wait();
         }
+        const isWethPair = currentPair.token0.toLowerCase() === CONFIG.wbone.toLowerCase() ||
+                           currentPair.token1.toLowerCase() === CONFIG.wbone.toLowerCase();
+        let tx;
+        if (isWethPair) {
+            const otherToken = currentPair.token0.toLowerCase() === CONFIG.wbone.toLowerCase()
+                ? currentPair.token1 : currentPair.token0;
+            tx = await routerContract.removeLiquidityETH(
+                otherToken, currentPair.stable, currentPair.lpBalance,
+                0, 0, account, deadline
+            );
+        } else {
+            tx = await routerContract.removeLiquidity(
+                currentPair.token0, currentPair.token1, currentPair.stable,
+                currentPair.lpBalance, 0, 0, account, deadline
+            );
+        }
+        showActionStatus('pending', t('txSubmitted') + shortenAddress(tx.hash));
+        await tx.wait();
+        showActionStatus('success', t('removeOk'));
+        await queryUserPosition();
+    } catch (error) {
+        showActionStatus('error', t('removeFail') + (error.reason || error.message));
+    }
+}
 
-        // ── Query Pair ──
-        async function queryPair() {
-            if (!provider) { showStatus('error', t('connectFirst')); return; }
-            const pairAddr = document.getElementById('pairAddress').value.trim();
-            if (!ethers.utils.isAddress(pairAddr)) { showStatus('error', t('invalidAddr')); return; }
-            try {
-                showStatus('info', t('querying'));
-                pairContract = new ethers.Contract(pairAddr, ABI.pair, provider);
-                const voterContract = new ethers.Contract(CONFIG.voter, ABI.voter, provider);
-                const [token0Addr, token1Addr, stable, gaugeAddr] = await Promise.all([
-                    pairContract.token0(),
-                    pairContract.token1(),
-                    pairContract.stable(),
-                    voterContract.gauges(pairAddr)
-                ]);
-                const token0Contract = new ethers.Contract(token0Addr, ABI.erc20, provider);
-                const token1Contract = new ethers.Contract(token1Addr, ABI.erc20, provider);
-                const [symbol0, symbol1] = await Promise.all([
-                    token0Contract.symbol(),
-                    token1Contract.symbol()
-                ]);
-                currentPair = {
-                    address: pairAddr, token0: token0Addr, token1: token1Addr,
-                    symbol0, symbol1, stable, gauge: gaugeAddr
-                };
-                if (gaugeAddr !== ethers.constants.AddressZero) {
-                    gaugeContract = new ethers.Contract(gaugeAddr, ABI.gauge, signer);
-                } else {
-                    gaugeContract = null;
-                }
-                refreshPairUI();
-                await queryUserPosition();
-                showStatus('success', t('queryOk'));
-            } catch (error) {
-                showStatus('error', t('queryFail') + error.message);
-            }
-        }
+// ── Helpers ──
+function shortenAddress(addr) {
+    return addr.slice(0, 6) + '...' + addr.slice(-4);
+}
 
-        function refreshPairUI() {
-            if (!currentPair) return;
-            document.getElementById('token0').textContent =
-                `${currentPair.symbol0} (${shortenAddress(currentPair.token0)})`;
-            document.getElementById('token1').textContent =
-                `${currentPair.symbol1} (${shortenAddress(currentPair.token1)})`;
-            document.getElementById('isStable').textContent =
-                currentPair.stable ? t('stableYes') : t('stableNo');
-            document.getElementById('gaugeAddress').textContent =
-                currentPair.gauge === ethers.constants.AddressZero ? t('none') : shortenAddress(currentPair.gauge);
-            document.getElementById('pairInfo').classList.remove('hidden');
-        }
+function showStatus(type, message) {
+    const d = document.createElement('div');
+    d.className = `status ${type}`;
+    d.textContent = message;
+    const container = document.querySelector('.app-container');
+    const footer = container.querySelector('.footer');
+    container.insertBefore(d, footer);
+    setTimeout(() => d.remove(), 5000);
+}
 
-        // ── User Position ──
-        async function queryUserPosition() {
-            if (!currentPair || !account) return;
-            try {
-                const [lpBalance, gaugeBalance, earned] = await Promise.all([
-                    pairContract.balanceOf(account),
-                    currentPair.gauge !== ethers.constants.AddressZero && gaugeContract
-                        ? gaugeContract.balanceOf(account)
-                        : Promise.resolve(ethers.constants.Zero),
-                    currentPair.gauge !== ethers.constants.AddressZero && gaugeContract
-                        ? gaugeContract.earned(CONFIG.woof, account)
-                        : Promise.resolve(ethers.constants.Zero)
-                ]);
-                const decimals = await pairContract.decimals();
-                document.getElementById('lpBalance').textContent =
-                    parseFloat(ethers.utils.formatUnits(lpBalance, decimals)).toFixed(6);
-                document.getElementById('gaugeBalance').textContent =
-                    parseFloat(ethers.utils.formatUnits(gaugeBalance, decimals)).toFixed(6);
-                document.getElementById('pendingRewards').textContent =
-                    parseFloat(ethers.utils.formatUnits(earned, 18)).toFixed(4) + ' WOOF';
-                document.getElementById('positionCard').classList.remove('hidden');
-                // Show/hide gauge actions based on whether gauge exists
-                const gaugeActions = document.getElementById('gaugeActions');
-                if (gaugeContract) {
-                    gaugeActions.style.display = 'grid';
-                } else {
-                    gaugeActions.style.display = 'none';
-                }
-                currentPair.lpBalance = lpBalance;
-                currentPair.gaugeBalance = gaugeBalance;
-                currentPair.decimals = decimals;
-            } catch (error) {
-                console.error('queryUserPosition error:', error);
-            }
-        }
+function showActionStatus(type, message) {
+    document.getElementById('actionStatus').innerHTML = `<div class="status ${type}">${message}</div>`;
+}
 
-        // ── Unstake ──
-        async function unstake() {
-            if (!currentPair) { showStatus('error', t('connectFirst')); return; }
-            if (!gaugeContract) { showStatus('error', t('noGauge')); return; }
-            if (currentPair.gaugeBalance.isZero()) { showStatus('error', t('noStaked')); return; }
-            try {
-                showActionStatus('pending', t('unstaking'));
-                const tx = await gaugeContract.withdraw(currentPair.gaugeBalance);
-                showActionStatus('pending', t('txSubmitted') + shortenAddress(tx.hash));
-                await tx.wait();
-                showActionStatus('success', t('unstakeOk'));
-                await queryUserPosition();
-            } catch (error) {
-                showActionStatus('error', t('unstakeFail') + (error.reason || error.message));
-            }
-        }
+// ── Event Bindings ──
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
 
-        // ── Claim Rewards ──
-        async function claimRewards() {
-            if (!currentPair) { showStatus('error', t('connectFirst')); return; }
-            if (!gaugeContract) { showStatus('error', t('noGauge')); return; }
-            try {
-                showActionStatus('pending', t('claiming'));
-                const tx = await gaugeContract.getReward(account, [CONFIG.woof]);
-                showActionStatus('pending', t('txSubmitted') + shortenAddress(tx.hash));
-                await tx.wait();
-                showActionStatus('success', t('claimOk'));
-                await queryUserPosition();
-            } catch (error) {
-                showActionStatus('error', t('claimFail') + (error.reason || error.message));
-            }
-        }
+document.getElementById('connectBtn').addEventListener('click', connectWallet);
+document.getElementById('tQueryBtn').addEventListener('click', queryPair);
+document.getElementById('tUnstakeBtn').addEventListener('click', unstake);
+document.getElementById('tClaimBtn').addEventListener('click', claimRewards);
+document.getElementById('tRemoveBtn').addEventListener('click', removeLiquidity);
+document.getElementById('btnEn').addEventListener('click', () => setLang('en'));
+document.getElementById('btnZh').addEventListener('click', () => setLang('zh'));
 
-        // ── Remove Liquidity ──
-        async function removeLiquidity() {
-            if (!currentPair || !pairContract) { showStatus('error', t('connectFirst')); return; }
-            const totalLp = currentPair.lpBalance.add(currentPair.gaugeBalance);
-            if (totalLp.isZero()) { showStatus('error', t('noLp')); return; }
-            if (!currentPair.gaugeBalance.isZero()) { showStatus('error', t('unstakeFirst')); return; }
-            try {
-                showActionStatus('pending', t('removing'));
-                const routerContract = new ethers.Contract(CONFIG.router, ABI.router, signer);
-                const deadline = Math.floor(Date.now() / 1000) + 1200;
-                const allowance = await pairContract.allowance(account, CONFIG.router);
-                if (allowance.lt(currentPair.lpBalance)) {
-                    showActionStatus('pending', t('approving'));
-                    const approveTx = await pairContract.approve(CONFIG.router, ethers.constants.MaxUint256);
-                    await approveTx.wait();
-                }
-                const isWethPair = currentPair.token0.toLowerCase() === CONFIG.wbone.toLowerCase() ||
-                                   currentPair.token1.toLowerCase() === CONFIG.wbone.toLowerCase();
-                let tx;
-                if (isWethPair) {
-                    const otherToken = currentPair.token0.toLowerCase() === CONFIG.wbone.toLowerCase()
-                        ? currentPair.token1 : currentPair.token0;
-                    tx = await routerContract.removeLiquidityETH(
-                        otherToken, currentPair.stable, currentPair.lpBalance,
-                        0, 0, account, deadline
-                    );
-                } else {
-                    tx = await routerContract.removeLiquidity(
-                        currentPair.token0, currentPair.token1, currentPair.stable,
-                        currentPair.lpBalance, 0, 0, account, deadline
-                    );
-                }
-                showActionStatus('pending', t('txSubmitted') + shortenAddress(tx.hash));
-                await tx.wait();
-                showActionStatus('success', t('removeOk'));
-                await queryUserPosition();
-            } catch (error) {
-                showActionStatus('error', t('removeFail') + (error.reason || error.message));
-            }
-        }
+// ── Init ──
+applyI18n();
 
-        // ── Helpers ──
-        function shortenAddress(addr) {
-            return addr.slice(0, 6) + '...' + addr.slice(-4);
-        }
-        function validateAddress(input) {
-            const v = input.value.trim();
-            input.style.borderColor = (v && !ethers.utils.isAddress(v)) ? '#e74c3c' : 'rgba(255,255,255,0.1)';
-        }
-        function showStatus(type, message) {
-            const d = document.createElement('div');
-            d.className = `status ${type}`;
-            d.textContent = message;
-            document.querySelector('.container').appendChild(d);
-            setTimeout(() => d.remove(), 5000);
-        }
-        function showActionStatus(type, message) {
-            document.getElementById('actionStatus').innerHTML = `<div class="status ${type}">${message}</div>`;
-        }
-
-        // ── Init ──
-        applyI18n();
-
-        if (window.ethereum) {
-            window.ethereum.on('accountsChanged', () => window.location.reload());
-            window.ethereum.on('chainChanged', () => window.location.reload());
-        }
-    </script>
+if (window.ethereum) {
+    window.ethereum.on('accountsChanged', () => window.location.reload());
+    window.ethereum.on('chainChanged', () => window.location.reload());
+}
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"75124c326cb447fe934cde04713ae013","r":1,"spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
