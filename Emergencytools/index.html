@@ -721,9 +721,7 @@ button:disabled {
                 <span class="emoji">🔐</span>
                 <span id="tVeWoofTitle">veWOOF Unlock</span>
             </div>
-            <div class="warning" id="tVeWoofWarning">⚠️ Enter VotingEscrow contract address and your veNFT Token ID. If lock expired, you can unlock and withdraw your WOOF.</div>
-            <label id="tVeContractLabel">VotingEscrow Contract Address</label>
-            <input type="text" id="votingEscrowAddress" placeholder="0x..." style="margin-bottom:12px;">
+            <div class="warning" id="tVeWoofWarning">⚠️ Enter your veNFT Token ID to check lock status. If expired, you can unlock and withdraw your WOOF.</div>
             <label id="tTokenIdLabel">veNFT Token ID</label>
             <input type="number" id="veNftTokenId" placeholder="e.g. 1234" min="0">
             <button id="tQueryVeBtn">Query Lock Info</button>
@@ -755,7 +753,6 @@ button:disabled {
             </div>
             <div style="font-size:13px;color:var(--woof-brown);line-height:1.8;padding-left:16px;">
                 <ol style="padding-left:4px;">
-                    <li>Enter VotingEscrow contract address (find it on woofswap.finance)</li>
                     <li>Enter your veNFT Token ID (from when you locked WOOF)</li>
                     <li>Click "Query Lock Info" to check your lock status</li>
                     <li>If lock has expired, the "Unlock" button will be enabled</li>
@@ -1001,6 +998,7 @@ const CONFIG = {
     voter: '0x30d9159c8c9e403A0e9597837052F70cf8eC362c',
     wbone: '0x839FdB6cc98342B428E074C1573ADF6D48CA3bFd',
     woof: '0xD0daa7B6ff1B40d3cc6F0B2Cf7E85cB993D1c834',
+    votingEscrow: '0x839FdB6cc98342B428E074C1573ADF6D48CA3bFd', // TODO: Update with actual VotingEscrow address
 };
 
 const ABI = {
@@ -1263,11 +1261,6 @@ let currentVeNftData = null;
 
 async function queryVeLock() {
     if (!provider) { showStatus('error', t('connectFirst')); return; }
-    const veContractAddr = document.getElementById('votingEscrowAddress').value.trim();
-    if (!ethers.utils.isAddress(veContractAddr)) {
-        showStatus('error', t('invalidContract'));
-        return;
-    }
     const tokenIdStr = document.getElementById('veNftTokenId').value.trim();
     if (!tokenIdStr || isNaN(parseInt(tokenIdStr))) {
         showStatus('error', t('invalidTokenId'));
@@ -1276,7 +1269,7 @@ async function queryVeLock() {
     const tokenId = parseInt(tokenIdStr);
     try {
         showStatus('info', t('queryingLock'));
-        veNftContract = new ethers.Contract(veContractAddr, ABI.votingEscrow, provider);
+        veNftContract = new ethers.Contract(CONFIG.votingEscrow, ABI.votingEscrow, provider);
         const [lockData, veBalance, owner] = await Promise.all([
             veNftContract.locked(tokenId),
             veNftContract.balanceOfNFT(tokenId),
