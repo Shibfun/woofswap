@@ -600,6 +600,10 @@ button:disabled {
             <span class="tab-icon">⚡</span>
             <span id="tTabActions">Actions</span>
         </button>
+        <button class="tab-btn" data-tab="vewoof">
+            <span class="tab-icon">🔒</span>
+            <span id="tTabVeWOOF">veWOOF</span>
+        </button>
     </div>
 
     <!-- Tab 1: Wallet -->
@@ -710,6 +714,57 @@ button:disabled {
         </div>
     </div>
 
+    <!-- Tab 4: veWOOF -->
+    <div class="tab-content" id="tab-vewoof">
+        <div class="card">
+            <div class="card-title">
+                <span class="emoji">🔐</span>
+                <span id="tVeWoofTitle">veWOOF Unlock</span>
+            </div>
+            <div class="warning" id="tVeWoofWarning">⚠️ Enter VotingEscrow contract address and your veNFT Token ID. If lock expired, you can unlock and withdraw your WOOF.</div>
+            <label id="tVeContractLabel">VotingEscrow Contract Address</label>
+            <input type="text" id="votingEscrowAddress" placeholder="0x..." style="margin-bottom:12px;">
+            <label id="tTokenIdLabel">veNFT Token ID</label>
+            <input type="number" id="veNftTokenId" placeholder="e.g. 1234" min="0">
+            <button id="tQueryVeBtn">Query Lock Info</button>
+            <div id="veLockInfo" class="info-box hidden" style="margin-top:14px;">
+                <div class="info-row">
+                    <span class="info-label" id="tLockedAmount">Locked WOOF</span>
+                    <span class="info-value" id="lockedWoofAmount">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" id="tLockExpiry">Lock Expiry</span>
+                    <span class="info-value" id="lockExpiry">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" id="tVeBalance">veWOOF Balance</span>
+                    <span class="info-value" id="veBalance">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" id="tLockStatus">Status</span>
+                    <span class="info-value" id="lockStatus">-</span>
+                </div>
+            </div>
+            <button class="btn-success" style="margin-top:12px;" id="tUnlockBtn" disabled>Unlock & Withdraw WOOF</button>
+            <div id="veActionStatus"></div>
+        </div>
+        <div class="card">
+            <div class="card-title">
+                <span class="emoji">📖</span>
+                <span id="tVeInstrTitle">veWOOF Instructions</span>
+            </div>
+            <div style="font-size:13px;color:var(--woof-brown);line-height:1.8;padding-left:16px;">
+                <ol style="padding-left:4px;">
+                    <li>Enter VotingEscrow contract address (find it on woofswap.finance)</li>
+                    <li>Enter your veNFT Token ID (from when you locked WOOF)</li>
+                    <li>Click "Query Lock Info" to check your lock status</li>
+                    <li>If lock has expired, the "Unlock" button will be enabled</li>
+                    <li>Click "Unlock & Withdraw WOOF" to get your WOOF back</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
     <div class="footer">
         WoofSwap Emergency Tool · Shibarium Network
     </div>
@@ -723,6 +778,7 @@ const I18N = {
         tabWallet: 'Wallet',
         tabQuery: 'Query',
         tabActions: 'Actions',
+        tabVeWOOF: 'veWOOF',
         step1: 'Connect Wallet',
         connect: 'Connect MetaMask',
         connected: 'Connected ✓',
@@ -746,6 +802,30 @@ const I18N = {
         removeBtn: 'Remove Liquidity (All)',
         instrTitle: 'Instructions',
         noPosition: 'Query a pair first to see your position',
+        // veWOOF
+        veWoofTitle: 'veWOOF Unlock',
+        veWoofWarning: '⚠️ Enter VotingEscrow contract address and your veNFT Token ID. If lock expired, you can unlock and withdraw your WOOF.',
+        veContractLabel: 'VotingEscrow Contract Address',
+        tokenIdLabel: 'veNFT Token ID',
+        queryVeBtn: 'Query Lock Info',
+        lockedAmount: 'Locked WOOF',
+        lockExpiry: 'Lock Expiry',
+        veBalance: 'veWOOF Balance',
+        lockStatus: 'Status',
+        unlockBtn: 'Unlock & Withdraw WOOF',
+        veInstrTitle: 'veWOOF Instructions',
+        lockLocked: 'Locked',
+        lockExpired: 'Expired - Ready to unlock',
+        noLock: 'No lock found',
+        invalidTokenId: 'Please enter a valid Token ID',
+        invalidContract: 'Please enter a valid contract address',
+        queryingLock: 'Querying lock info...',
+        queryLockOk: 'Lock info loaded',
+        queryLockFail: 'Query failed: ',
+        notExpired: 'Lock has not expired yet',
+        unlocking: 'Unlocking WOOF...',
+        unlockOk: 'WOOF unlocked successfully!',
+        unlockFail: 'Unlock failed: ',
         installMM: 'Please install MetaMask',
         connectFail: 'Connection failed: ',
         walletOk: 'Wallet connected!',
@@ -775,6 +855,7 @@ const I18N = {
         tabWallet: '钱包',
         tabQuery: '查询',
         tabActions: '操作',
+        tabVeWOOF: 'veWOOF',
         step1: '连接钱包',
         connect: '连接 MetaMask',
         connected: '已连接 ✓',
@@ -798,6 +879,30 @@ const I18N = {
         removeBtn: '移除流动性（全部）',
         instrTitle: '使用说明',
         noPosition: '请先查询配对以查看持仓',
+        // veWOOF
+        veWoofTitle: 'veWOOF 解锁',
+        veWoofWarning: '⚠️ 输入 VotingEscrow 合约地址和你的 veNFT Token ID。如果锁仓已到期，可以解锁并取回 WOOF。',
+        veContractLabel: 'VotingEscrow 合约地址',
+        tokenIdLabel: 'veNFT Token ID',
+        queryVeBtn: '查询锁仓信息',
+        lockedAmount: '锁仓 WOOF',
+        lockExpiry: '到期时间',
+        veBalance: 'veWOOF 余额',
+        lockStatus: '状态',
+        unlockBtn: '解锁并取回 WOOF',
+        veInstrTitle: 'veWOOF 使用说明',
+        lockLocked: '锁仓中',
+        lockExpired: '已到期 - 可以解锁',
+        noLock: '未找到锁仓',
+        invalidTokenId: '请输入有效的 Token ID',
+        invalidContract: '请输入有效的合约地址',
+        queryingLock: '正在查询锁仓信息...',
+        queryLockOk: '锁仓信息加载成功',
+        queryLockFail: '查询失败: ',
+        notExpired: '锁仓尚未到期',
+        unlocking: '正在解锁 WOOF...',
+        unlockOk: 'WOOF 解锁成功！',
+        unlockFail: '解锁失败: ',
         installMM: '请安装 MetaMask 钱包',
         connectFail: '连接失败: ',
         walletOk: '钱包已连接！',
@@ -833,6 +938,7 @@ function setLang(l) {
     document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
     applyI18n();
     if (currentPair) refreshPairUI();
+    if (currentVeNftData) refreshVeUI();
 }
 
 function applyI18n() {
@@ -840,6 +946,7 @@ function applyI18n() {
     document.getElementById('tTabWallet').textContent = t('tabWallet');
     document.getElementById('tTabQuery').textContent = t('tabQuery');
     document.getElementById('tTabActions').textContent = t('tabActions');
+    document.getElementById('tTabVeWOOF').textContent = t('tabVeWOOF');
     document.getElementById('tStep1').textContent = t('step1');
     document.getElementById('connectBtn').textContent =
         document.getElementById('connectBtn').disabled ? t('connected') : t('connect');
@@ -859,6 +966,18 @@ function applyI18n() {
     document.getElementById('tRemoveBtn').textContent = t('removeBtn');
     document.getElementById('tInstrTitle').textContent = t('instrTitle');
     document.getElementById('tNoPosition').textContent = t('noPosition');
+    // veWOOF
+    document.getElementById('tVeWoofTitle').textContent = t('veWoofTitle');
+    document.getElementById('tVeWoofWarning').textContent = t('veWoofWarning');
+    document.getElementById('tVeContractLabel').textContent = t('veContractLabel');
+    document.getElementById('tTokenIdLabel').textContent = t('tokenIdLabel');
+    document.getElementById('tQueryVeBtn').textContent = t('queryVeBtn');
+    document.getElementById('tLockedAmount').textContent = t('lockedAmount');
+    document.getElementById('tLockExpiry').textContent = t('lockExpiry');
+    document.getElementById('tVeBalance').textContent = t('veBalance');
+    document.getElementById('tLockStatus').textContent = t('lockStatus');
+    document.getElementById('tUnlockBtn').textContent = t('unlockBtn');
+    document.getElementById('tVeInstrTitle').textContent = t('veInstrTitle');
 }
 
 // ── Tab Switching ──
@@ -913,6 +1032,13 @@ const ABI = {
     router: [
         'function removeLiquidity(address tokenA, address tokenB, bool stable, uint256 liquidity, uint256 amountAMin, uint256 amountBMin, address to, uint256 deadline) returns (uint256 amountA, uint256 amountB)',
         'function removeLiquidityETH(address token, bool stable, uint256 liquidity, uint256 amountTokenMin, uint256 amountETHMin, address to, uint256 deadline) returns (uint256 amountToken, uint256 amountETH)'
+    ],
+    votingEscrow: [
+        'function locked(uint256 tokenId) view returns (int128 amount, uint256 end)',
+        'function balanceOfNFT(uint256 tokenId) view returns (uint256)',
+        'function ownerOf(uint256 tokenId) view returns (address)',
+        'function withdraw(uint256 tokenId) external',
+        'function token() view returns (address)'
     ]
 };
 
@@ -1131,6 +1257,97 @@ async function removeLiquidity() {
     }
 }
 
+// ── veWOOF Functions ──
+let veNftContract = null;
+let currentVeNftData = null;
+
+async function queryVeLock() {
+    if (!provider) { showStatus('error', t('connectFirst')); return; }
+    const veContractAddr = document.getElementById('votingEscrowAddress').value.trim();
+    if (!ethers.utils.isAddress(veContractAddr)) {
+        showStatus('error', t('invalidContract'));
+        return;
+    }
+    const tokenIdStr = document.getElementById('veNftTokenId').value.trim();
+    if (!tokenIdStr || isNaN(parseInt(tokenIdStr))) {
+        showStatus('error', t('invalidTokenId'));
+        return;
+    }
+    const tokenId = parseInt(tokenIdStr);
+    try {
+        showStatus('info', t('queryingLock'));
+        veNftContract = new ethers.Contract(veContractAddr, ABI.votingEscrow, provider);
+        const [lockData, veBalance, owner] = await Promise.all([
+            veNftContract.locked(tokenId),
+            veNftContract.balanceOfNFT(tokenId),
+            veNftContract.ownerOf(tokenId)
+        ]);
+        currentVeNftData = {
+            tokenId,
+            lockedAmount: lockData.amount,
+            expiry: lockData.end,
+            veBalance,
+            owner
+        };
+        refreshVeUI();
+        showStatus('success', t('queryLockOk'));
+    } catch (error) {
+        showStatus('error', t('queryLockFail') + error.message);
+        document.getElementById('veLockInfo').classList.add('hidden');
+        document.getElementById('tUnlockBtn').disabled = true;
+    }
+}
+
+function refreshVeUI() {
+    if (!currentVeNftData) return;
+    const lockedAmount = ethers.utils.formatUnits(currentVeNftData.lockedAmount.abs(), 18);
+    const lockedIsZero = currentVeNftData.lockedAmount.isZero();
+    const expiryDate = new Date(currentVeNftData.expiry.toNumber() * 1000);
+    const now = Math.floor(Date.now() / 1000);
+    const isExpired = currentVeNftData.expiry.toNumber() <= now;
+    const veBalance = ethers.utils.formatUnits(currentVeNftData.veBalance, 18);
+    document.getElementById('lockedWoofAmount').textContent = parseFloat(lockedAmount).toFixed(4) + ' WOOF';
+    document.getElementById('lockExpiry').textContent = expiryDate.toLocaleDateString() + ' ' + expiryDate.toLocaleTimeString();
+    document.getElementById('veBalance').textContent = parseFloat(veBalance).toFixed(4);
+    if (lockedIsZero) {
+        document.getElementById('lockStatus').textContent = t('noLock');
+        document.getElementById('lockStatus').style.color = 'var(--woof-brown)';
+        document.getElementById('tUnlockBtn').disabled = true;
+    } else {
+        document.getElementById('lockStatus').textContent = isExpired ? t('lockExpired') : t('lockLocked');
+        document.getElementById('lockStatus').style.color = isExpired ? 'var(--woof-green)' : 'var(--woof-orange)';
+        document.getElementById('tUnlockBtn').disabled = !isExpired;
+    }
+    document.getElementById('veLockInfo').classList.remove('hidden');
+}
+
+async function unlockVeWoof() {
+    if (!currentVeNftData || !veNftContract) {
+        showStatus('error', t('connectFirst'));
+        return;
+    }
+    const now = Math.floor(Date.now() / 1000);
+    if (currentVeNftData.expiry.toNumber() > now) {
+        showStatus('error', t('notExpired'));
+        return;
+    }
+    try {
+        showVeActionStatus('pending', t('unlocking'));
+        veNftContract = veNftContract.connect(signer);
+        const tx = await veNftContract.withdraw(currentVeNftData.tokenId);
+        showVeActionStatus('pending', t('txSubmitted') + shortenAddress(tx.hash));
+        await tx.wait();
+        showVeActionStatus('success', t('unlockOk'));
+        await queryVeLock();
+    } catch (error) {
+        showVeActionStatus('error', t('unlockFail') + (error.reason || error.message));
+    }
+}
+
+function showVeActionStatus(type, message) {
+    document.getElementById('veActionStatus').innerHTML = `<div class="status ${type}">${message}</div>`;
+}
+
 // ── Helpers ──
 function shortenAddress(addr) {
     return addr.slice(0, 6) + '...' + addr.slice(-4);
@@ -1163,6 +1380,10 @@ document.getElementById('tRemoveBtn').addEventListener('click', removeLiquidity)
 document.getElementById('btnEn').addEventListener('click', () => setLang('en'));
 document.getElementById('btnZh').addEventListener('click', () => setLang('zh'));
 
+// veWOOF events
+document.getElementById('tQueryVeBtn').addEventListener('click', queryVeLock);
+document.getElementById('tUnlockBtn').addEventListener('click', unlockVeWoof);
+
 // ── Init ──
 applyI18n();
 
@@ -1171,6 +1392,5 @@ if (window.ethereum) {
     window.ethereum.on('chainChanged', () => window.location.reload());
 }
 </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"75124c326cb447fe934cde04713ae013","r":1,"spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
